@@ -1,4 +1,3 @@
-# moa-pipeline
 # MOA Exploration + Resources
 ## Problem Statement
 **Predict**: Drug sample and dose as one or more MoA classes
