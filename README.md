@@ -10,11 +10,14 @@
 - https://www.kaggle.com/c/lish-moa/discussion/181040 (Ideas for Exploration)
 - https://www.kaggle.com/gunesevitan/mechanisms-of-action-moa-prediction-eda (Completed EDA)
 
+## Papers
+- https://arxiv.org/pdf/1908.07442.pdf (TabNet)
+- https://arxiv.org/abs/1906.02629 (Label Smoothing)
+
 ## General Resources
 - https://www.kaggle.com/pmarcelino/comprehensive-data-exploration-with-python (EDA Basics on Housing Price Comp.)
 - https://www.kaggle.com/arthurtok/introduction-to-ensembling-stacking-in-python (Feature Cleaning ref. Titanic)
 - https://www.kaggle.com/cdeotte/pseudo-labeling-qda-0-969 (Pseudo-labeling)
-- https://arxiv.org/abs/1906.02629 (Label Smoothing)
 
 ## Baselines
 - https://www.kaggle.com/optimo/tabnetregressor-2-0-train-infer (TabNetRegressor 0.01864)
