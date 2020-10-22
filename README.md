@@ -13,6 +13,8 @@
 ## Papers
 - https://arxiv.org/pdf/1908.07442.pdf (TabNet)
 - https://arxiv.org/abs/1906.02629 (Label Smoothing)
+- https://papers.nips.cc/paper/8717-when-does-label-smoothing-help.pdf (Label Smoothing)
+- https://www.researchgate.net/publication/339737729_Does_label_smoothing_mitigate_label_noise (Label Smoothing)
 
 ## General Resources
 - https://www.kaggle.com/pmarcelino/comprehensive-data-exploration-with-python (EDA Basics on Housing Price Comp.)
