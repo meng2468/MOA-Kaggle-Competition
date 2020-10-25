@@ -1,1 +1,1 @@
-# Tweak model in neural_net
+Do model tweaking in neural_net.py, then run in ../run.py
