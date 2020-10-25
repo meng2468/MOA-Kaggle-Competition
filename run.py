@@ -9,7 +9,7 @@ def load_data():
 #Tweak actual net in neural_net
 def run_experiment():
     df_train_x, df_train_y = pp.get_training_data()
-    datasets = cv.get_folds(df_train_x, df_train_y, 4)
+    datasets = cv.get_folds(df_train_x, df_train_y, 10)
 
     losses = []
     accurracies = []
@@ -33,6 +33,6 @@ def run_experiment():
 
 def train_and_save():
     df_train_x, df_train_y = pp.get_training_data()
-    model = nn.train_model(df_train_x, df_train_y, save=True, name="trialv1")
+    model = nn.train_model(df_train_x, df_train_y, save=True, name="nn.007.515")
 
 train_and_save()
