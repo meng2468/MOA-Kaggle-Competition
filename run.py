@@ -30,4 +30,6 @@ def run_experiment():
     for i in range(len(accurracies)):
         print("Fold " + str(i) + ": " + str(losses[i]) + " loss, " + str(accurracies[i]) + " accuracy")
     
+    print("Average Loss: " + str(sum(losses)/len(losses)))
+    print("Average Accuracy: " + str(sum(accurracies)/len(accurracies)))
 run_experiment()
