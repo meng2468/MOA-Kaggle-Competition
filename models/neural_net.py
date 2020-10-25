@@ -5,6 +5,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 
+#TODO Think of proper way to store / tweak model settings
 
 #Lower batch size, way lower learning rate 500 ~ e-5!
 def train_model(df_train_x, df_train_y, save=False):

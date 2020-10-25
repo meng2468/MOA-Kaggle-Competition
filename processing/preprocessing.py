@@ -1,7 +1,7 @@
 import numpy as np 
 import pandas as pd 
 
-#Only run these functions from main project folder
+#TODO PCA
 
 #Label correcting and normalisation
 def initial_data_parse():
@@ -13,7 +13,7 @@ def initial_data_parse():
     df_train_x.to_csv('./processed-input/clean_train_features.csv', encoding='utf-8', index=False)
     df_train_y.to_csv('./processed-input/clean_train_targets.csv', encoding='utf-8', index=False)
 
-#Prepare for training
+#Data preperation for training
 def generate_train_csv():
     print("Parsing Data")
     df_train_x = pd.read_csv('./processed-input/clean_train_features.csv')

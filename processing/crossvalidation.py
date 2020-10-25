@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import KFold
 
-
+#TODO Multilabel Stratified KFold
 def get_folds(df_features, df_targets, folds):
     features = df_features.to_numpy()
     targets = df_targets.to_numpy()
