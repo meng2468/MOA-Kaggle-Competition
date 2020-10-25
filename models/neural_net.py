@@ -38,20 +38,15 @@ model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=.001),
     metrics=["accuracy"],
 )
+
 early_stop = keras.callbacks.EarlyStopping(monitor='loss', patience=4)
 reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, mode='min', min_lr=1E-5)
 
 history = model.fit(x_train, y_train, batch_size=500, epochs=100, validation_split=0.2, callbacks=[early_stop, reduce_lr])
+
 test_scores = model.evaluate(x_test, y_test, verbose=1)
 print("Test loss:", test_scores[0])
 print("Test accuracy:", test_scores[1])
 
 name = 'l' + str(test_scores[0])[1:5] + '_a' + str(test_scores[1])[1:5]
-if test_scores[0] <= .03:
-    model.save('./nnets/great/'+name)
-elif test_scores[0] <= .038:
-    model.save('./nnets/good/'+name)
-elif test_scores[0] <= .044:
-    model.save('./nnets/decent/'+name)
-elif test_scores[0] <= .05:
-    model.save('./nnets/meh/'+name)
+model.save('./nnets/great/'+name)
