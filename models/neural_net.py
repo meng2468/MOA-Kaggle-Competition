@@ -8,7 +8,7 @@ import tensorflow_addons as tfa
 #TODO Think of proper way to store / tweak model settings
 
 #Lower batch size, way lower learning rate 500 ~ e-5!
-def train_model(df_train_x, df_train_y, save=False):
+def train_model(df_train_x, df_train_y, save=False, name="trialv1"):
     inputs = keras.Input(shape=(len(df_train_x.columns)))
     x = layers.BatchNormalization()(inputs)
     x = layers.Dropout(.2)(x)
@@ -34,8 +34,7 @@ def train_model(df_train_x, df_train_y, save=False):
     history = model.fit(df_train_x.to_numpy(), df_train_y.to_numpy(), batch_size=500, epochs=100, validation_split=0.1, callbacks=[early_stop, reduce_lr])     
     
     if save:
-        name = 'l' + str(test_scores[0])[1:5] + '_a' + str(test_scores[1])[1:5]
-        model.save('./nnets/great/'+name) 
+        model.save('./models/pre-trained/'+name) 
     
     return model
 
