@@ -8,45 +8,39 @@ import tensorflow_addons as tfa
 
 #Lower batch size, way lower learning rate 500 ~ e-5!
 
-# tf.random.set_seed(12345)
+def train_model(df_train_x, df_train_y, save=False):
+    inputs = keras.Input(shape=(len(df_train_x.columns)))
+    x = layers.BatchNormalization()(inputs)
+    x = layers.Dropout(.2)(x)
+    x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.AlphaDropout(.2)(x)
+    x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
+    x = layers.BatchNormalization()(x)
+    outputs = tfa.layers.WeightNormalization(layers.Dense(len(df_train_y.columns),activation="tanh"))(x)
 
-df_train_x = pd.read_csv('../processed-input/proc_train_features.csv')
-df_train_y = pd.read_csv('../processed-input/proc_train_targets.csv')
+    model = keras.Model(inputs=inputs, outputs=outputs, name="moa-first-try")
 
-x_train = df_train_x[:20000].to_numpy()
-y_train = df_train_y[:20000].to_numpy()
+    model.compile(
+        loss=keras.losses.BinaryCrossentropy(),
+        optimizer=keras.optimizers.Adam(learning_rate=.0001),
+        metrics=["accuracy"],
+    )
+    
+    early_stop = keras.callbacks.EarlyStopping(monitor='loss', patience=4)
+    
+    reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, mode='min', min_lr=1E-5)
+    
+    history = model.fit(df_train_x.to_numpy(), df_train_y.to_numpy(), batch_size=500, epochs=40, validation_split=0.1, callbacks=[early_stop, reduce_lr])     
+    
+    if save:
+        name = 'l' + str(test_scores[0])[1:5] + '_a' + str(test_scores[1])[1:5]
+        model.save('./nnets/great/'+name) 
+    
+    return model
 
-x_test = df_train_x[20000:].to_numpy()
-y_test = df_train_y[20000:].to_numpy()
+def evaluate_model(df_test_x, df_test_y, model):
+    test_scores = model.evaluate(df_test_x.to_numpy(), df_test_y.to_numpy(), verbose=1)
+    return test_scores[0], test_scores[1]
 
-inputs = keras.Input(shape=(len(df_train_x.columns)))
-x = layers.BatchNormalization()(inputs)
-x = layers.Dropout(.2)(x)
-x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
-x = layers.BatchNormalization()(x)
-x = layers.AlphaDropout(.2)(x)
-x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
-x = layers.BatchNormalization()(x)
 
-outputs = tfa.layers.WeightNormalization(layers.Dense(len(df_train_y.columns),activation="tanh"))(x)
-
-model = keras.Model(inputs=inputs, outputs=outputs, name="moa-first-try")
-print(model.summary())
-
-model.compile(
-    loss=keras.losses.BinaryCrossentropy(),
-    optimizer=keras.optimizers.Adam(learning_rate=.001),
-    metrics=["accuracy"],
-)
-
-early_stop = keras.callbacks.EarlyStopping(monitor='loss', patience=4)
-reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, mode='min', min_lr=1E-5)
-
-history = model.fit(x_train, y_train, batch_size=500, epochs=100, validation_split=0.2, callbacks=[early_stop, reduce_lr])
-
-test_scores = model.evaluate(x_test, y_test, verbose=1)
-print("Test loss:", test_scores[0])
-print("Test accuracy:", test_scores[1])
-
-name = 'l' + str(test_scores[0])[1:5] + '_a' + str(test_scores[1])[1:5]
-model.save('./nnets/great/'+name)
