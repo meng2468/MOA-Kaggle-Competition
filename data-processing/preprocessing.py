@@ -34,5 +34,3 @@ def prepare_training_data():
     df_train_x= df_train_x.drop('cp_type', axis=1)
     df_train_x.to_csv('../processed-input/proc_train_features.csv', encoding='utf-8', index=False)
     df_train_y.to_csv('../processed-input/proc_train_targets.csv', encoding='utf-8', index=False)
-
-prepare_training_data()
