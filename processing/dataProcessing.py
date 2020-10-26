@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from pandas.api.types import CategoricalDtype
 
 from processing.dataReader import get_genes_cell_header
 
@@ -10,6 +11,33 @@ from processing.dataReader import get_genes_cell_header
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import VarianceThreshold
 
+### ========================================== Feature Adding
+
+### =========== One Hot Encoding ============
+def one_hot_encoding(data, column, values):
+    '''
+    replace columns with one-hot encoding
+
+    Parameters:
+        columns = columns name
+        values = all possible values
+
+    return dataframe
+    '''
+    data[column] = data[column].astype(CategoricalDtype(values))
+
+    onehot = pd.get_dummies(data[column],prefix=column, drop_first=True)
+
+    print(f"On-Hot Encoded {column}: Adding {len(values)-2} columns")
+
+    ## insert
+    loc = data.columns.get_loc(column)
+    for c in reversed(onehot.columns):
+        data.insert(loc,c, onehot[c])
+
+    ## remove
+    return data.drop(columns=column)
+
 ### =========== PCA ============
 def get_PCA_features(data, n_comp, suffix="pca-", random_state=42):
     '''
@@ -18,16 +46,20 @@ def get_PCA_features(data, n_comp, suffix="pca-", random_state=42):
     features_pca = PCA(n_components=n_comp, random_state=random_state).fit_transform(data)
     return pd.DataFrame(features_pca, columns=[f'{suffix}{i}' for i in range(n_comp)])
 
+### ========================================== Feature Selection
+
+def drop_columns(data, columns):
+    return data.drop(columns=columns)
+
 ### =========== Variance Encoding ============
 def get_variance_encoding_columns(data, threshold=0.5):
     '''
     get feature name with variance encoding
     '''
     var_thresh = VarianceThreshold(threshold=threshold)
-    var_thresh.fit(data.iloc[:, 4:])
+    var_thresh.fit(data)
     mask = var_thresh.get_support()
-    cat_mask = np.concatenate(([True]*4, mask))
-    return data.columns[~cat_mask]
+    return data.columns[~mask]
 
 ### =========== pipeline ============
 def split_moa_train_test(data, train_len, test_len):
@@ -37,6 +69,11 @@ def split_moa_train_test(data, train_len, test_len):
     train_data = data[:train_len].reset_index(drop=True, inplace=False)
     test_data = data[-test_len:].reset_index(drop=True, inplace=False)
     return (train_data, test_data)
+
+def one_hot_encode_moa(data):
+    data = one_hot_encoding(data, "cp_time", [24,48,72])
+    data = one_hot_encoding(data, "cp_dose", ["D1","D2"])
+    return data
 
 def add_PCA_feature(data, g_n_comp=50, c_n_comp=15):
     '''
@@ -67,17 +104,17 @@ def remove_variance_encoding(data, threshold=0.5):
     '''
     remove features usinf variance encoding
     '''
-    remove_cols = get_variance_encoding_columns(data, threshold)
+    remove_cols = get_variance_encoding_columns(data.iloc[:, 4:], threshold)
     cat_remain = data.columns[~data.columns.isin(remove_cols)]
 
     print(f"Remove #{len(remove_cols)} features via Variance Encoding (threshold={threshold})")
-    return data[cat_remain]
+
+    return drop_columns(data, remove_cols)
 
 def remove_ctl_vehicle(train, target):
     '''
     remove ctl_vehicle form train_data and train_target
     '''
-
     ctl_ids = train[train['cp_type']=='ctl_vehicle'].sig_id
 
     print(f"Remove {len(ctl_ids)} ctl_vehicel data")
@@ -87,6 +124,9 @@ def remove_ctl_vehicle(train, target):
 
     return train, target
 
+def drop_cp_type(data):
+    print("Dropping cp_type column")
+    return drop_columns(data, "cp_type")
 
 def preprocessing_pipeline(train_features, train_targets, test_features):
 
@@ -94,11 +134,23 @@ def preprocessing_pipeline(train_features, train_targets, test_features):
     test_len = test_features.shape[0]
 
     data = pd.concat((train_features, test_features))
+
+    ## TODO: save removed columns for testset transfromation
     data = remove_variance_encoding(data)
+
+    ## TODO: save PCA value for testset transfromation
     data = add_PCA_feature(data)
+
 
     train_features, test_features = split_moa_train_test(data, train_len, test_len)
 
     train_features, train_targets = remove_ctl_vehicle(train_features, train_targets)
+
+    train_features = drop_cp_type(train_features)
+    train_features = one_hot_encode_moa(train_features)
+
+    test_features = drop_cp_type(test_features)
+    test_features = one_hot_encode_moa(test_features)
+
 
     return train_features, train_targets, test_features
