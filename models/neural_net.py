@@ -8,8 +8,7 @@ import tensorflow_addons as tfa
 #TODO Think of proper way to store / tweak model settings
 
 #Lower batch size, way lower learning rate 500 ~ e-5!
-def train_model(df_train_x, df_train_y, save=False, name="trialv1"):
-    print(df_train_x.head())
+def train_model(df_train_x, df_train_y, df_test_x, df_test_y, save=False, name="trialv1"):
     inputs = keras.Input(shape=(len(df_train_x.columns)))
     x = layers.BatchNormalization()(inputs)
     x = layers.Dropout(.1)(x)
@@ -28,7 +27,7 @@ def train_model(df_train_x, df_train_y, save=False, name="trialv1"):
         metrics=["accuracy"],
     )
     
-    early_stop = keras.callbacks.EarlyStopping(monitor='loss', patience=4)
+    early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
     
     reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, mode='min', min_lr=1E-5)
     
@@ -36,7 +35,14 @@ def train_model(df_train_x, df_train_y, save=False, name="trialv1"):
     for x in range(len(df_train_y.columns)):
         class_weight[x] = 1
 
-    history = model.fit(df_train_x.to_numpy(), df_train_y.to_numpy(), batch_size=500, epochs=200, validation_split=0.1, callbacks=[early_stop, reduce_lr], class_weight=class_weight)     
+    history = model.fit(
+        df_train_x.to_numpy(),
+        df_train_y.to_numpy(),
+        batch_size=500,
+        epochs=200,
+        validation_data=(df_test_x, df_test_y),
+        callbacks=[early_stop, reduce_lr],
+        class_weight=class_weight)     
     
     if save:
         model.save('./models/pre-trained/'+name) 
