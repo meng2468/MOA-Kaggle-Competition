@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
+from sklearn import metrics
 
 #TODO Think of proper way to store / tweak model settings
 
@@ -25,8 +26,8 @@ def train_model(df_train_x, df_train_y, df_test_x, df_test_y):
     #Training parameters
     model.compile(
         loss=keras.losses.BinaryCrossentropy(),
-        optimizer=keras.optimizers.Adam(learning_rate=.007),
-        metrics=["accuracy"],
+        optimizer=keras.optimizers.Adam(learning_rate=.001),
+        metrics=[keras.metrics.Precision(), keras.metrics.Recall()],
     )
     
     early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
@@ -41,7 +42,7 @@ def train_model(df_train_x, df_train_y, df_test_x, df_test_y):
         df_train_x.to_numpy(),
         df_train_y.to_numpy(),
         batch_size=500,
-        epochs=200,
+        epochs=30,
         validation_data=(df_test_x, df_test_y),
         callbacks=[early_stop, reduce_lr],
         class_weight=class_weight)     
@@ -49,7 +50,11 @@ def train_model(df_train_x, df_train_y, df_test_x, df_test_y):
     return model
 
 def evaluate_model(df_test_x, df_test_y, model):
-    test_scores = model.evaluate(df_test_x.to_numpy(), df_test_y.to_numpy(), verbose=1)
-    return test_scores[0], test_scores[1]
+    loss = model.evaluate(df_test_x.to_numpy(), df_test_y.to_numpy(), verbose=1)[0]
+    
+    m = tf.keras.metrics.AUC()
+    m.update_state(df_test_y.to_numpy(), model.predict(df_test_x))
+    auc = m.result().numpy()
+    return loss, auc
 
 
