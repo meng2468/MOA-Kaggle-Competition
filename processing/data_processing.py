@@ -4,7 +4,6 @@ from pandas.api.types import CategoricalDtype
 
 from processing.data_reader import get_genes_cell_header
 
-
 # from sklearn import preprocessing
 # from sklearn.metrics import log_loss
 # from sklearn.preprocessing import StandardScaler
@@ -98,7 +97,6 @@ def add_PCA_feature(data, g_n_comp=50, c_n_comp=15):
     data_wiht_pca = pd.concat((data.reset_index(drop=True, inplace=False) , pca_genes, pca_cells), axis=1)
 
     return data_wiht_pca
-
 
 def remove_variance_encoding(data, threshold=0.5):
     '''
