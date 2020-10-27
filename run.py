@@ -19,13 +19,13 @@ def save_augmented_data():
     df_train_y.loc[:, df_train_y.columns[1:]].to_csv('./processed-input/kh_train_targets.csv', index=False)
 
 #Tweak actual net in neural_net
-def run_experiment():
+def run_experiment(learning_rate):
     df_train_x, df_train_y = pp.get_training_data(kh=True)
-    datasets = cv.get_folds(df_train_x, df_train_y, 6)
+    datasets = cv.get_folds(df_train_x, df_train_y, 5)
 
     avg_loss = []
     avg_auc = []
-    seeds = 1
+    seeds = 3
 
     for seed in range(seeds):
         losses = []
@@ -37,24 +37,26 @@ def run_experiment():
             train_x, train_y = fold['train']
             test_x, test_y = fold['test']
 
-            model = nn.train_model(train_x, train_y, test_x, test_y)
+            model = nn.train_model(train_x, train_y, test_x, test_y, learning_rate)
             loss, auc = nn.evaluate_model(test_x, test_y, model)
             losses.append(loss)
             aucs.append(auc)
             print("AUC: " + str(auc))
 
-        for j in range(len(aucs)):
-            print("Fold " + str(j) + ": " + str(losses[j]) + " loss, " + str(aucs[j]) + " auc")
-
         avg_loss.append(sum(losses)/len(losses))
         avg_auc.append(sum(aucs)/len(aucs))
 
     for seed in range(seeds):
-        print("Seed " + str(seed+1) + ": " + str(avg_loss[seed]) + "l, " + str(avg_auc[seed]) + "auc")
+        print("Seed " + str(seed+1) + ": " + str(avg_loss[seed]) + " loss, " + str(avg_auc[seed]) + " auc")
+    return [learning_rate, sum(avg_loss)/len(avg_loss), sum(avg_auc)/len(avg_auc)]
 
 def train_and_save():
     df_train_x, df_train_y = pp.get_training_data()
     model = nn.train_model(df_train_x, df_train_y, save=True, name="nn.007.515")
 
-        
-run_experiment()
+
+results = []
+for lr in [.008,.01,.03,.05]:
+    results.append(run_experiment(lr))
+
+print(results)

@@ -9,7 +9,7 @@ from sklearn import metrics
 #TODO Think of proper way to store / tweak model settings
 
 #Lower batch size, way lower learning rate 500 ~ e-5!
-def train_model(df_train_x, df_train_y, df_test_x, df_test_y):
+def train_model(df_train_x, df_train_y, df_test_x, df_test_y, learning_rate):
     #Architecture
     inputs = keras.Input(shape=(len(df_train_x.columns)))
     x = layers.BatchNormalization()(inputs)
@@ -22,11 +22,11 @@ def train_model(df_train_x, df_train_y, df_test_x, df_test_y):
     outputs = tfa.layers.WeightNormalization(layers.Dense(len(df_train_y.columns),activation="sigmoid"))(x)
 
     model = keras.Model(inputs=inputs, outputs=outputs, name="moa-first-try")
-
+    
     #Training parameters
     model.compile(
         loss=keras.losses.BinaryCrossentropy(),
-        optimizer=keras.optimizers.Adam(learning_rate=.001),
+        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
         metrics=[keras.metrics.Precision(), keras.metrics.Recall()],
     )
     
@@ -42,7 +42,7 @@ def train_model(df_train_x, df_train_y, df_test_x, df_test_y):
         df_train_x.to_numpy(),
         df_train_y.to_numpy(),
         batch_size=500,
-        epochs=30,
+        epochs=50,
         validation_data=(df_test_x, df_test_y),
         callbacks=[early_stop, reduce_lr],
         class_weight=class_weight)     
