@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-import processing.dataReader as reader
-from processing.dataProcessing import *
+import processing.data_reader as reader
+from processing.data_processing import *
 
 
 def preprocessing_pipeline(train_features, train_targets, test_features):

@@ -5,10 +5,10 @@ import pandas as pd
 
 #Label correcting and normalisation
 def initial_data_parse():
-    df_train_x = pd.read_csv('../input/train_features.csv')
+    df_train_x = pd.read_csv('./input/train_features.csv')
     df_train_x['cp_dose'] = df_train_x['cp_dose'].replace({'D1' : 1, 'D2': 2})
 
-    df_train_y = pd.read_csv('../input/train_targets_scored.csv')
+    df_train_y = pd.read_csv('./input/train_targets_scored.csv')
 
     df_train_x.to_csv('./processed-input/clean_train_features.csv', encoding='utf-8', index=False)
     df_train_y.to_csv('./processed-input/clean_train_targets.csv', encoding='utf-8', index=False)
@@ -21,23 +21,25 @@ def generate_train_csv():
     
     df_train_x = df_train_x.drop('sig_id', axis=1)
     df_train_y = df_train_y.drop('sig_id', axis=1)
-
+    features = list(df_train_x.columns)
+    targets = list(df_train_y.columns)
     #Purge ctl_vehicle = 0 for the training set
     df_train = df_train_x
-    for column in df_train_y.columns:
+    for column in targets:
         df_train[column] = df_train_y[column]
     
     df_train = df_train[df_train['cp_type'] != 'ctl_vehicle']
 
-    df_train_x = pd.DataFrame(columns=df_train_x.columns)
-    df_train_y = pd.DataFrame(columns=df_train_y.columns)
+    df_x = pd.DataFrame(columns=features)
+    df_y = pd.DataFrame(columns=targets)
 
-    for column in df_train_y.columns:
-        df_train_y[column] = df_train[column]
-    for column in df_train_x.columns[1:]:
-        df_train_x[column] = df_train[column]
+    print("Splitting merged dataframe")
+    df_x = df_train.loc[:,features[1:]]
+    df_y = df_train.loc[:, targets]
 
     df_train_x= df_train_x.drop('cp_type', axis=1)
+    print(df_train_x.head())
+    print(df_train_y.head())
     df_train_x.to_csv('./processed-input/proc_train_features.csv', encoding='utf-8', index=False)
     df_train_y.to_csv('./processed-input/proc_train_targets.csv', encoding='utf-8', index=False)
 

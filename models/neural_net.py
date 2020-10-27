@@ -9,6 +9,7 @@ import tensorflow_addons as tfa
 
 #Lower batch size, way lower learning rate 500 ~ e-5!
 def train_model(df_train_x, df_train_y, save=False, name="trialv1"):
+    print(df_train_x.head())
     inputs = keras.Input(shape=(len(df_train_x.columns)))
     x = layers.BatchNormalization()(inputs)
     x = layers.Dropout(.1)(x)
@@ -17,7 +18,7 @@ def train_model(df_train_x, df_train_y, save=False, name="trialv1"):
     x = layers.AlphaDropout(.1)(x)
     x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
     x = layers.BatchNormalization()(x)
-    outputs = tfa.layers.WeightNormalization(layers.Dense(len(df_train_y.columns),activation="tanh"))(x)
+    outputs = tfa.layers.WeightNormalization(layers.Dense(len(df_train_y.columns),activation="sigmoid"))(x)
 
     model = keras.Model(inputs=inputs, outputs=outputs, name="moa-first-try")
 

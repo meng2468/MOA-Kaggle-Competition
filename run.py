@@ -1,10 +1,11 @@
 import processing.preprocessing as pp
 import processing.crossvalidation as cv
 import models.neural_net as nn
+import json
 
 def load_data():
     pp.initial_data_parse()
-    pp.generate_train_csv
+    pp.generate_train_csv()
 
 #Tweak actual net in neural_net
 def run_experiment():
@@ -35,4 +36,5 @@ def train_and_save():
     df_train_x, df_train_y = pp.get_training_data()
     model = nn.train_model(df_train_x, df_train_y, save=True, name="nn.007.515")
 
-train_and_save()
+        
+run_experiment()
