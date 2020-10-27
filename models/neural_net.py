@@ -8,22 +8,24 @@ import tensorflow_addons as tfa
 #TODO Think of proper way to store / tweak model settings
 
 #Lower batch size, way lower learning rate 500 ~ e-5!
-def train_model(df_train_x, df_train_y, df_test_x, df_test_y, save=False, name="trialv1"):
+def train_model(df_train_x, df_train_y, df_test_x, df_test_y):
+    #Architecture
     inputs = keras.Input(shape=(len(df_train_x.columns)))
     x = layers.BatchNormalization()(inputs)
-    x = layers.Dropout(.1)(x)
+    x = layers.Dropout(.2)(x)
     x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
     x = layers.BatchNormalization()(x)
-    x = layers.AlphaDropout(.1)(x)
+    x = layers.AlphaDropout(.2)(x)
     x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
     x = layers.BatchNormalization()(x)
     outputs = tfa.layers.WeightNormalization(layers.Dense(len(df_train_y.columns),activation="sigmoid"))(x)
 
     model = keras.Model(inputs=inputs, outputs=outputs, name="moa-first-try")
 
+    #Training parameters
     model.compile(
         loss=keras.losses.BinaryCrossentropy(),
-        optimizer=keras.optimizers.Adam(learning_rate=.0001),
+        optimizer=keras.optimizers.Adam(learning_rate=.007),
         metrics=["accuracy"],
     )
     
@@ -43,10 +45,7 @@ def train_model(df_train_x, df_train_y, df_test_x, df_test_y, save=False, name="
         validation_data=(df_test_x, df_test_y),
         callbacks=[early_stop, reduce_lr],
         class_weight=class_weight)     
-    
-    if save:
-        model.save('./models/pre-trained/'+name) 
-    
+
     return model
 
 def evaluate_model(df_test_x, df_test_y, model):
