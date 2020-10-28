@@ -42,7 +42,7 @@ class Model:
         df_train_x.to_numpy(),
         df_train_y.to_numpy(),
         batch_size=self.batch_size,
-        epochs=5,
+        epochs=50,
         validation_data=(df_test_x, df_test_y),
         callbacks=[early_stop, reduce_lr])
 
