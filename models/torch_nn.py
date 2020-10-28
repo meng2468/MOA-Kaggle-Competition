@@ -10,7 +10,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from ..processing.stratified_kflod import get_stratified_kfold_index
+import sys
+sys.path.append("..")
+from processing.stratified_kfold import get_stratified_kfold_index
 
 DEFAULT_PARAM = {
     ## Training
