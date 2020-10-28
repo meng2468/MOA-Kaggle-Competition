@@ -41,7 +41,7 @@ def tuning_objective(trial):
         test_x, test_y = fold['test']
         
         myModel = Model(len(df_x.columns), len(df_y.columns))
-        myModel.dropout = trial.suggest_uniform('dropout', 0, .3)
+        myModel.batch_size = trial.suggest_int('batch_size', 32, 512, 20)
         myModel.learning_rate = trial.suggest_loguniform('lr', 1e-4, 1e-2)
         myModel.run_training(train_x, train_y, test_x, test_y)
         
@@ -56,7 +56,7 @@ def tuning_objective(trial):
 
 def param_tuning():
     study = optuna.create_study()
-    study.optimize(tuning_objective, n_trials=30)
+    study.optimize(tuning_objective, n_trials=60)
     print(study.best_params)
 
 def run_test():

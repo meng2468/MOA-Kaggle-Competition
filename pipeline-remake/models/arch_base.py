@@ -8,8 +8,9 @@ from sklearn import metrics
 
 class Model:
     def __init__(self, features, targets):
-        self.dropout = .2
-        self.learning_rate = .001
+        #Learning Rate and Dropout Optimised for Batch 2k
+        self.dropout = 0.1694205906705529
+        self.learning_rate = 0.003190630348140866
         self.batch_size = 2000
 
         
@@ -42,7 +43,7 @@ class Model:
         df_train_x.to_numpy(),
         df_train_y.to_numpy(),
         batch_size=self.batch_size,
-        epochs=120,
+        epochs=100,
         validation_data=(df_test_x, df_test_y),
         callbacks=[early_stop, reduce_lr])
 
