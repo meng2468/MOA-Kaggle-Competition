@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 import sys
 sys.path.append("..")
-from processing.stratified_kflod import get_stratified_kfold_index
+from processing.stratified_kfold import get_stratified_kfold_index
 
 DEFAULT_PARAM = {
     ## Training
