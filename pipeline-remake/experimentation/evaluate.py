@@ -27,11 +27,11 @@ def quick_test(df_x, df_y):
     
     print(losses, aucs)
 
-def objective(trial):
+def tuning_objective(trial):
     df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
     df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
 
-    datasets = get_folds(df_x, df_y, 5)
+    datasets = get_folds(df_x, df_y, 3)
     losses = []
     aucs = []
     i = 0
@@ -41,8 +41,8 @@ def objective(trial):
         test_x, test_y = fold['test']
         
         myModel = Model(len(df_x.columns), len(df_y.columns))
-        myModel.dropout = trial.suggest_uniform('dropout', .1, .3)
-        myModel.learning_rate = trial.suggest_loguniform('lr', 5e-6, 1e-3)
+        myModel.dropout = trial.suggest_uniform('dropout', 0, .3)
+        myModel.learning_rate = trial.suggest_loguniform('lr', 1e-4, 1e-2)
         myModel.run_training(train_x, train_y, test_x, test_y)
         
         loss, auc = myModel.get_eval(test_x, test_y)
@@ -56,7 +56,7 @@ def objective(trial):
 
 def param_tuning():
     study = optuna.create_study()
-    study.optimize(objective, n_trials=30)
+    study.optimize(tuning_objective, n_trials=30)
     print(study.best_params)
 
 def run_test():
