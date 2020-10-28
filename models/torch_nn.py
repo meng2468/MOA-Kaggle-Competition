@@ -200,7 +200,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
                 break
     return oof
 
-def prediction(X, saved_model, PARAM=DEFAULT_PARAM):
+def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
     testdataset = TestDataset(X.values)
     testloader = torch.utils.data.DataLoader(testdataset, batch_size=PARAM["BATCH_SIZE"], shuffle=False)
 
