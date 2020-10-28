@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 import sys
 sys.path.append("..")
-from processing.stratified_kfold import get_stratified_kfold_index
+from processing.stratified_kflod import get_stratified_kfold_index
 
 DEFAULT_PARAM = {
     ## Training
@@ -258,6 +258,7 @@ def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
 def get_log_loss(Y, pred):
     if type(Y) == pd.DataFrame:
         Y = Y.values
-    pred = oof
+    if type(pred) == pd.DataFrame:
+        pred = pred.values
     scores = [log_loss(Y[:, i], pred[:, i]) for i in range(Y.shape[1])]
     return scores
