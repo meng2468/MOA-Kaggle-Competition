@@ -32,4 +32,4 @@ def to_csv(df_x):
     df_x = gene_exp(df_x)
     df_x = cell_via(df_x)
 
-    pd.to_csv('feature_augm.csv', index=False)
+    df_x.to_csv('feature_augm.csv', index=False)
