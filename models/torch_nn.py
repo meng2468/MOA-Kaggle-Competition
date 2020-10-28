@@ -10,6 +10,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
+from ..processing.stratified_kflod import get_stratified_kfold_index
+
 DEFAULT_PARAM = {
     ## Training
     "DEVICE" :  ('cuda' if torch.cuda.is_available() else 'cpu'),
@@ -212,7 +214,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
                 break
     return oof
 
-def run_k_fold(X,Y, X_test, seed):
+def run_k_fold(X,Y, X_test, seed, PARAM=DEFAULT_PARAM):
     seed_everything(seed)
     fold_index = get_stratified_kfold_index(Y,n_split=PARAM["NFOLDS"])
 
