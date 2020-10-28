@@ -16,17 +16,17 @@ Seperate the three experimental processes
     - CSV Saving for Experiment
 2. Model Engineering
     - NN Architecture
-3. Validation
-    - k-fold CV
-    - multi-seed with k-fold CV
 4. Experimentation
     - Run a combinationg of:
         - Feature Engineering
         - Architecture
-        - Validation 
-    - Perform Hyperparameter Tuning
+        - Hyperparameters 
     - Save Results
+Don't know where to put
+- Submission Template
+- Hyperparameter tuning
+- Crossvalidation
+
 Submissions
 - Copy feature eng. function
 - Copy model architecture
-

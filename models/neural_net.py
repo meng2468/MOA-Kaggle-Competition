@@ -41,8 +41,8 @@ def train_model(df_train_x, df_train_y, df_test_x, df_test_y, learning_rate):
     history = model.fit(
         df_train_x.to_numpy(),
         df_train_y.to_numpy(),
-        batch_size=500,
-        epochs=50,
+        batch_size=2000,
+        epochs=200,
         validation_data=(df_test_x, df_test_y),
         callbacks=[early_stop, reduce_lr],
         class_weight=class_weight)     

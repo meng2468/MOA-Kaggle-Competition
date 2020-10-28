@@ -20,7 +20,7 @@ def save_augmented_data():
 
 #Tweak actual net in neural_net
 def run_experiment(learning_rate):
-    df_train_x, df_train_y = pp.get_training_data(kh=True)
+    df_train_x, df_train_y = pp.get_training_data(kh=False)
     datasets = cv.get_folds(df_train_x, df_train_y, 5)
 
     avg_loss = []
@@ -33,7 +33,7 @@ def run_experiment(learning_rate):
         i = 0
         for fold in datasets:
             i += 1
-            print("Running for Seed " + str(seed+1) + ", Fold " + str(i))
+            print("Running for lr " + str(learning_rate) + ", seed "+str(seed+1) + ", fold " + str(i))
             train_x, train_y = fold['train']
             test_x, test_y = fold['test']
 
@@ -41,7 +41,6 @@ def run_experiment(learning_rate):
             loss, auc = nn.evaluate_model(test_x, test_y, model)
             losses.append(loss)
             aucs.append(auc)
-            print("AUC: " + str(auc))
 
         avg_loss.append(sum(losses)/len(losses))
         avg_auc.append(sum(aucs)/len(aucs))
@@ -56,7 +55,7 @@ def train_and_save():
 
 
 results = []
-for lr in [.008,.01,.03,.05]:
+for lr in [.0005, .001,.005]:
     results.append(run_experiment(lr))
 
 print(results)
