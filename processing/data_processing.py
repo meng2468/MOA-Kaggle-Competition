@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
-from processing.data_reader import get_genes_cell_header
+from .data_reader import get_genes_cell_header
 
 # from sklearn import preprocessing
 # from sklearn.metrics import log_loss

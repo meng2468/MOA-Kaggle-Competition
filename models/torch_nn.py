@@ -1,0 +1,215 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils.data import DataLoader
+
+DEFAULT_PARAM = {
+    ## Training
+    "DEVICE" :  ('cuda' if torch.cuda.is_available() else 'cpu'),
+    "EPOCHS" :  2,  #30
+    "LEARNING_RATE" :  1e-3,
+    "WEIGHT_DECAY" :  1e-5,
+    "EARLY_STOPPING_STEPS" :  10,
+    "EARLY_STOP" :  False,
+
+    ## Dataloader
+    "BATCH_SIZE" :  256,
+    "NFOLDS" :  5,
+
+    ## Model
+    "NUM_FEATURE" : 930,
+    "NUM_TARAGET" : 206,
+    "HIDDENT_SIZE" : 1024,
+}
+
+class TrainDataset:
+    def __init__(self, features, targets):
+        self.features = features
+        self.targets = targets
+
+    def __len__(self):
+        return (self.features.shape[0])
+
+    def __getitem__(self, idx):
+        dct = {
+            'x' : torch.tensor(self.features[idx, :], dtype=torch.float),
+            'y' : torch.tensor(self.targets[idx, :], dtype=torch.float)
+        }
+        return dct
+
+class TestDataset:
+    def __init__(self, features):
+        self.features = features
+
+    def __len__(self):
+        return (self.features.shape[0])
+
+    def __getitem__(self, idx):
+        dct = {
+            'x' : torch.tensor(self.features[idx, :], dtype=torch.float)
+        }
+        return dct
+
+def torch_train(model, optimizer, scheduler, loss_fn, dataloader, device):
+    model.train()
+    final_loss = 0
+
+    for data in dataloader:
+        optimizer.zero_grad()
+        inputs, targets = data['x'].to(device), data['y'].to(device)
+        outputs = model(inputs)
+        loss = loss_fn(outputs, targets)
+        loss.backward()
+        optimizer.step()
+        scheduler.step()
+
+        final_loss += loss.item()
+
+    final_loss /= len(dataloader)
+
+    return final_loss
+
+def torch_valid(model, loss_fn, dataloader, device):
+    model.eval()
+    final_loss = 0
+    valid_preds = []
+
+    for data in dataloader:
+        inputs, targets = data['x'].to(device), data['y'].to(device)
+        outputs = model(inputs)
+        loss = loss_fn(outputs, targets)
+
+        final_loss += loss.item()
+        valid_preds.append(outputs.sigmoid().detach().cpu().numpy())
+
+    final_loss /= len(dataloader)
+    valid_preds = np.concatenate(valid_preds)
+
+    return final_loss, valid_preds
+
+def torch_inference(model, dataloader, device):
+    model.eval()
+    preds = []
+
+    for data in dataloader:
+        inputs = data['x'].to(device)
+
+        with torch.no_grad():
+            outputs = model(inputs)
+
+        preds.append(outputs.sigmoid().detach().cpu().numpy())
+
+    preds = np.concatenate(preds)
+
+    return preds
+
+class Model(nn.Module):
+    def __init__(self, num_features, num_targets, hidden_size):
+        super(Model, self).__init__()
+        self.batch_norm1 = nn.BatchNorm1d(num_features)
+#         self.dropout1 = nn.Dropout(0.2)
+        self.dense1 = nn.utils.weight_norm(nn.Linear(num_features, hidden_size))
+
+        self.batch_norm2 = nn.BatchNorm1d(hidden_size)
+        self.dropout2 = nn.Dropout(0.5)
+        self.dense2 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
+
+        self.batch_norm3 = nn.BatchNorm1d(hidden_size)
+        self.dropout3 = nn.Dropout(0.5)
+        self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
+
+    def forward(self, x):
+        x = self.batch_norm1(x)
+#         x = self.dropout1(x)
+        x = F.relu(self.dense1(x))
+
+        x = self.batch_norm2(x)
+        x = self.dropout2(x)
+        x = F.relu(self.dense2(x))
+
+        x = self.batch_norm3(x)
+        x = self.dropout3(x)
+        x = self.dense3(x)
+
+        return x
+
+def kfold_train_valid_dataloader(X, Y, valid_mask, batch_size):
+    '''
+    train valid split using valid_mask
+    return train_dataloader, valid_dataloader
+    '''
+
+    x_train = X[~valid_mask].reset_index(drop=True).values
+    y_train = Y[~valid_mask].reset_index(drop=True).values
+
+    x_valid = X[valid_mask].reset_index(drop=True).values
+    y_valid = Y[valid_mask].reset_index(drop=True).values
+
+    train_dataset = TrainDataset(x_train, y_train)
+    valid_dataset = TrainDataset(x_valid, y_valid)
+
+    trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    validloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
+
+    return trainloader, validloader
+
+
+def train_one_fold(X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
+    trainloader, validloader = kfold_train_valid_dataloader(X, Y, val_mask, PARAM["BATCH_SIZE"])
+
+    model = Model(
+        num_features=PARAM["NUM_FEATURE"],
+        num_targets=PARAM["NUM_TARAGET"],
+        hidden_size=PARAM["HIDDENT_SIZE"],
+    )
+    model.to(PARAM["DEVICE"])
+
+    optimizer = torch.optim.Adam(model.parameters(),
+                                 lr=PARAM["LEARNING_RATE"],
+                                 weight_decay=PARAM["WEIGHT_DECAY"])
+
+    scheduler = optim.lr_scheduler.OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e3,
+                                              max_lr=1e-2, epochs=PARAM["EPOCHS"], steps_per_epoch=len(trainloader))
+
+    loss_fn = nn.BCEWithLogitsLoss()
+
+    early_stopping_steps = PARAM["EARLY_STOPPING_STEPS"]
+    early_step = 0
+
+    ## training
+    oof = np.zeros(Y.shape)
+    best_loss = np.inf
+    for epoch in range(PARAM["EPOCHS"]):
+
+        train_loss = torch_train(model, optimizer,scheduler, loss_fn, trainloader, PARAM["DEVICE"])
+        valid_loss, valid_preds = torch_valid(model, loss_fn, validloader, PARAM["DEVICE"])
+        print(f"FOLD: {kfold}, EPOCH: {epoch}, train_loss: {train_loss}\tvalid_loss: {valid_loss}")
+
+        if valid_loss < best_loss:
+            best_loss = valid_loss
+            oof[val_mask] = valid_preds
+            torch.save(model.state_dict(), saved_path)
+
+        elif(PARAM["EARLY_STOP"] == True):
+            early_step += 1
+            if (early_step >= early_stopping_steps):
+                print(f"EarlyStop @ EPOCH: {epoch}")
+                break
+    return oof
+
+def prediction(X, saved_model, PARAM=DEFAULT_PARAM):
+    testdataset = TestDataset(X.values)
+    testloader = torch.utils.data.DataLoader(testdataset, batch_size=PARAM["BATCH_SIZE"], shuffle=False)
+
+    model = Model(
+        num_features=PARAM["NUM_FEATURE"],
+        num_targets=PARAM["NUM_TARAGET"],
+        hidden_size=PARAM["HIDDENT_SIZE"],
+    )
+
+    model.load_state_dict(torch.load(saved_model))
+    model.to(PARAM["DEVICE"])
+
+    predictions = torch_inference(model, testloader, PARAM["DEVICE"])
+    return predictions
