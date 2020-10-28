@@ -157,7 +157,7 @@ def kfold_train_valid_dataloader(X, Y, valid_mask, batch_size):
     return trainloader, validloader
 
 
-def train_one_fold(X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
+def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
     trainloader, validloader = kfold_train_valid_dataloader(X, Y, val_mask, PARAM["BATCH_SIZE"])
 
     model = Model(
