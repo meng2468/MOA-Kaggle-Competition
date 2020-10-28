@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import random
+import os
 from sklearn.metrics import log_loss
 
 import torch
@@ -26,6 +28,14 @@ DEFAULT_PARAM = {
     "NUM_TARAGET" : 206,
     "HIDDENT_SIZE" : 1024,
 }
+
+def seed_everything(seed=42):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
 
 class TrainDataset:
     def __init__(self, features, targets):
@@ -201,6 +211,29 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
                 print(f"EarlyStop @ EPOCH: {epoch}")
                 break
     return oof
+
+def run_k_fold(X,Y, X_test, seed):
+    seed_everything(seed)
+    fold_index = get_stratified_kfold_index(Y,n_split=PARAM["NFOLDS"])
+
+    train_count, target_count = Y.shape[0:2]
+    test_count = X_test.shape[0]
+
+    oof = np.zeros((train_count, target_count))
+    predictions = np.zeros((test_count, target_count))
+
+    for kfold in range(PARAM["NFOLDS"]):
+        val_mask = fold_index == kfold
+        saved_path = f"{seed}_FOLD{kfold}.pth"
+
+        oof_ = train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM)
+        pred_ = torch_prediction(X_test, saved_path, PARAM)
+
+        predictions += pred_
+        oof += oof_
+
+    predictions /= PARAM["NFOLDS"]
+    return oof, predictions
 
 def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
     testdataset = TestDataset(X.values)
