@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+from sklearn.metrics import log_loss
 
 import torch
 import torch.nn as nn
@@ -215,3 +217,10 @@ def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
 
     predictions = torch_inference(model, testloader, PARAM["DEVICE"])
     return predictions
+
+def get_log_loss(Y, pred):
+    if type(Y) == pd.DataFrame:
+        Y = Y.values
+    pred = oof
+    scores = [log_loss(Y[:, i], pred[:, i]) for i in range(Y.shape[1])]
+    return scores

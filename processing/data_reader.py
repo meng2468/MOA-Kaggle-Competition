@@ -32,12 +32,20 @@ def get_genes_cell_header(train_features):
 
     return (GENES, CELLS)
 
-def generate_submission_csv(sample_submission_path, prediction, outfile='submission.csv'):
-    sample_submission = pd.read_csv(sample_submission_path)
+def generate_submission_csv(prediction, folder='./lish-moa/', outfile='submission.csv'):
+    sample_submission = pd.read_csv(folder + 'sample_submission.csv')
     sample_submission.iloc[:,1:] = prediction
-    sub.to_csv(outfile, index=False)
+
+    # set ctl_vehicle to 0
+    test_features = pd.read_csv(folder + 'test_features.csv')
+    ignored_id = test_features[test_features['cp_type']=='ctl_vehicle'].sig_id
+
+    sample_submission.loc[sample_submission.sig_id.isin(ignored_id),sample_submission.columns[1:]] = 0
+
+    sample_submission.to_csv(outfile, index=False)
     print(f"Submission File saved: {outfile}")
 
+    return sample_submission
 
 def get_target_sample_count(train_targets):
     target_sample_count = train_targets.loc[:, train_targets.columns != 'sig_id'].sum().reset_index(name="counts").rename(columns={'index':'target'})
