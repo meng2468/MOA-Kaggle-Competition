@@ -6,9 +6,14 @@ import sys
 sys.path.insert(1, '../models')
 from arch_base import Model
 
+df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
+df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
+
 def tuning_objective(trial):
-    df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
-    df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
+    params = {}
+    params['batch_size'] = trial.suggest_int('batch_size', 100, 6000, 100)
+    params['learning_rate'] = trial.suggest_loguniform('lr', 1e-4, 1e-2)
+    params['dropout'] = trial.suggest_float('dropout', 0.1, .4)
 
     datasets = get_folds(df_x, df_y, 5)
     losses = []
@@ -19,10 +24,8 @@ def tuning_objective(trial):
         train_x, train_y = fold['train']
         test_x, test_y = fold['test']
         
-        myModel = Model(len(df_x.columns), len(df_y.columns))
-        # myModel.batch_size = trial.suggest_int('batch_size', 32, 512)
-        # myModel.learning_rate = trial.suggest_loguniform('lr', 1e-4, 1e-2)
-        myModel.dropout = trial.suggest_float('dropout', 0.1, .4)
+        myModel = Model(len(df_x.columns), len(df_y.columns), params)
+        
         myModel.run_training(train_x, train_y, test_x, test_y)
         
         loss, auc = myModel.get_eval(test_x, test_y)
@@ -36,7 +39,7 @@ def tuning_objective(trial):
 
 def param_tuning():
     study = optuna.create_study()
-    study.optimize(tuning_objective, n_trials=20)
+    study.optimize(tuning_objective, n_trials=50)
     print(study.best_params)
 
 param_tuning()

@@ -6,10 +6,10 @@ import sys
 sys.path.insert(1, '../models')
 from arch_base import Model
 
-def quick_test():
-    df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
-    df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
+df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
+df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
 
+def quick_test(params):
     datasets = get_folds(df_x, df_y, 5)
     fold_losses = []
     fold_aucs = []
@@ -19,7 +19,10 @@ def quick_test():
         train_x, train_y = fold['train']
         test_x, test_y = fold['test']
         
-        myModel = Model(len(df_x.columns), len(df_y.columns))
+        myModel = Model(len(df_x.columns), len(df_y.columns), params)
+        myModel.dropout = params['dropout']
+        myModel.learning_rate = params['learning_rate']
+        myModel.batch_size = params['batch_size']
         myModel.run_training(train_x, train_y, test_x, test_y)
         
         loss, auc = myModel.get_eval(test_x, test_y)
@@ -30,10 +33,7 @@ def quick_test():
     
     print(fold_losses, fold_aucs)
 
-def full_test():
-    df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
-    df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
-
+def full_test(params):
     seed_losses = []
     seed_aucs = []
     seeds = 3
@@ -47,7 +47,10 @@ def full_test():
             train_x, train_y = fold['train']
             test_x, test_y = fold['test']
             
-            myModel = Model(len(df_x.columns), len(df_y.columns))
+            myModel = Model(len(df_x.columns), len(df_y.columns), params)
+            myModel.dropout = params['dropout']
+            myModel.learning_rate = params['learning_rate']
+            myModel.batch_size = params['batch_size']
             myModel.run_training(train_x, train_y, test_x, test_y)
             
             loss, auc = myModel.get_eval(test_x, test_y)
@@ -57,9 +60,13 @@ def full_test():
             print("Seed " + str(seed+1) + " Fold " + str(i) + ": " + str(loss) + " loss, " + str(auc) + " auc")
         
         seed_losses.append(sum(fold_losses)/len(fold_losses))
-        fold_aucs.append(sum(fold_aucs)/len(fold_aucs))
+        seed_aucs.append(sum(fold_aucs)/len(fold_aucs))
         print("Seed " + str(seed+1))
         print(sum(fold_losses)/len(fold_losses), sum(fold_aucs)/len(fold_aucs))
     print("Average performance: " + str(sum(seed_losses)/seeds) + ", " + str(sum(seed_aucs)/seeds))
 
-full_test()
+params = {}
+params['dropout'] = 0.1694205906705529
+params['learning_rate'] = 0.003190630348140866 
+params['batch_size'] = 2000
+full_test(params)

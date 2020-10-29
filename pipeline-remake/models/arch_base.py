@@ -7,13 +7,10 @@ import tensorflow_addons as tfa
 from sklearn import metrics
 
 class Model:
-    def __init__(self, features, targets):
-        # 2k batch size
-        self.dropout = 0.1694205906705529
-        # self.learning_rate = 0.003190630348140866 
-        # self.dropout = 0.3960508154819118
-        self.learning_rate = 0.004248435178213642
-        self.batch_size = 474
+    def __init__(self, features, targets, params):
+        self.dropout = params['dropout']
+        self.learning_rate = params['learning_rate']
+        self.batch_size = params['batch_size']
 
         
         inputs = keras.Input(shape=(features))
@@ -34,7 +31,6 @@ class Model:
         self.model.compile(
                 loss=keras.losses.BinaryCrossentropy(),
                 optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate),
-                # metrics=[keras.metrics.Precision(), keras.metrics.Recall()],
             )
 
         early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
