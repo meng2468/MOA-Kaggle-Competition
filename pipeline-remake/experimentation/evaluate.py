@@ -10,7 +10,7 @@ df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
 df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
 
 def quick_test(params):
-    datasets = get_folds(df_x, df_y, 5)
+    datasets = get_strat_folds(df_x, df_y, 5)
     fold_losses = []
     fold_aucs = []
     i = 0
@@ -38,7 +38,7 @@ def full_test(params):
     seed_aucs = []
     seeds = 3
     for seed in range(seeds):
-        datasets = get_folds(df_x, df_y, 5)
+        datasets = get_strat_folds(df_x, df_y, 5)
         fold_losses = []
         fold_aucs = []
         i = 0
@@ -63,10 +63,11 @@ def full_test(params):
         seed_aucs.append(sum(fold_aucs)/len(fold_aucs))
         print("Seed " + str(seed+1))
         print(sum(fold_losses)/len(fold_losses), sum(fold_aucs)/len(fold_aucs))
+        
     print("Average performance: " + str(sum(seed_losses)/seeds) + ", " + str(sum(seed_aucs)/seeds))
 
 params = {}
 params['dropout'] = 0.1694205906705529
 params['learning_rate'] = 0.003190630348140866 
 params['batch_size'] = 2000
-full_test(params)
+quick_test(params)
