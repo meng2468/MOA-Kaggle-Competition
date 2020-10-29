@@ -6,7 +6,7 @@ import sys
 sys.path.insert(1, '../models')
 from arch_base import Model
 
-df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
+df_x = pd.read_csv('../processing/feature_eng_temp_rob_x.csv')
 df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
 
 def quick_test(params):
@@ -69,13 +69,13 @@ def full_test(params):
 
 params = {}
 
-params['dropout'] = 0.19
-params['learning_rate'] = 0.004
+params['dropout'] = 0.2093013646952079
+params['learning_rate'] = 0.003305851970846805
 params['batch_size'] = 900
 full_test(params)
 
 
-#Current best:
+#Current best (No robust scaling):
 # params['dropout'] = 0.2093013646952079
 # params['learning_rate'] = 0.003305851970846805
 # params['batch_size'] = 900
@@ -86,3 +86,14 @@ full_test(params)
 # params['batch_size'] = 900
 # Average performance: 0.016857877746224405, 0.8266015211741129
 # Average performance: 0.01684053341547648, 0.8256617387135824
+
+#Current best (Robust scaling):
+# params['dropout'] = 0.19
+# params['learning_rate'] = 0.004
+# params['batch_size'] = 900
+# Average performance: 0.01713248814145724, 0.8303231239318848
+
+# params['dropout'] = 0.2093013646952079
+# params['learning_rate'] = 0.003305851970846805
+# params['batch_size'] = 900
+# Average performance: 0.017142449940244355, 0.8301983118057251

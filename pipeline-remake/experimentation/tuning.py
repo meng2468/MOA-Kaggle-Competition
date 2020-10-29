@@ -6,7 +6,7 @@ import sys
 sys.path.insert(1, '../models')
 from arch_base import Model
 
-df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
+df_x = pd.read_csv('../processing/feature_eng_rob_temp_x.csv')
 df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
 
 def tuning_objective(trial):
