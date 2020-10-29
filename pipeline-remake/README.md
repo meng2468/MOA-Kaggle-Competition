@@ -17,15 +17,12 @@ Seperate the three experimental processes
 2. Model Engineering
     - NN Architecture
 4. Experimentation
-    - Run a combinationg of:
-        - Feature Engineering
-        - Architecture
-        - Hyperparameters 
-    - Save Results
+    - Evaluation
+    - Crossvalidation
+    - Hyperparameter Tuning
+    
 Don't know where to put
 - Submission Template
-- Hyperparameter tuning
-- Crossvalidation
 
 Submissions
 - Copy feature eng. function
