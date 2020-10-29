@@ -18,6 +18,7 @@ def get_strat_folds(df_features, df_targets, folds):
     print(len(datasets))
     return datasets
 
+#This CV is trash.
 def get_folds(df_features, df_targets, folds):
     features = df_features.to_numpy()
     targets = df_targets.to_numpy()

@@ -61,13 +61,28 @@ def full_test(params):
         
         seed_losses.append(sum(fold_losses)/len(fold_losses))
         seed_aucs.append(sum(fold_aucs)/len(fold_aucs))
-        print("Seed " + str(seed+1))
+        print('-'*40)
+        print("Seed " + str(seed+1)+ ":")
         print(sum(fold_losses)/len(fold_losses), sum(fold_aucs)/len(fold_aucs))
         
     print("Average performance: " + str(sum(seed_losses)/seeds) + ", " + str(sum(seed_aucs)/seeds))
 
 params = {}
-params['dropout'] = 0.1694205906705529
-params['learning_rate'] = 0.003190630348140866 
-params['batch_size'] = 2000
-quick_test(params)
+
+params['dropout'] = 0.19
+params['learning_rate'] = 0.004
+params['batch_size'] = 900
+full_test(params)
+
+
+#Current best:
+# params['dropout'] = 0.2093013646952079
+# params['learning_rate'] = 0.003305851970846805
+# params['batch_size'] = 900
+# Average performance: 0.016828974584738414, 0.8263675848642985
+
+# params['dropout'] = 0.19
+# params['learning_rate'] = 0.004
+# params['batch_size'] = 900
+# Average performance: 0.016857877746224405, 0.8266015211741129
+# Average performance: 0.01684053341547648, 0.8256617387135824
