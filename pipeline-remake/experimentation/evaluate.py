@@ -6,34 +6,13 @@ import sys
 sys.path.insert(1, '../models')
 from arch_base import Model
 
-def quick_test(df_x, df_y):
-    datasets = get_folds(df_x, df_y, 5)
-    losses = []
-    aucs = []
-    i = 0
-    for fold in datasets:
-        i += 1
-        train_x, train_y = fold['train']
-        test_x, test_y = fold['test']
-        
-        myModel = Model(len(df_x.columns), len(df_y.columns))
-        myModel.run_training(train_x, train_y, test_x, test_y)
-        
-        loss, auc = myModel.get_eval(test_x, test_y)
-        losses.append(loss)
-        aucs.append(auc)
-
-        print("Fold " + str(i) + ": " + str(loss) + " loss, " + str(auc) + " auc")
-    
-    print(losses, aucs)
-
-def tuning_objective(trial):
+def quick_test():
     df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
     df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
 
-    datasets = get_folds(df_x, df_y, 3)
-    losses = []
-    aucs = []
+    datasets = get_folds(df_x, df_y, 5)
+    fold_losses = []
+    fold_aucs = []
     i = 0
     for fold in datasets:
         i += 1
@@ -41,25 +20,46 @@ def tuning_objective(trial):
         test_x, test_y = fold['test']
         
         myModel = Model(len(df_x.columns), len(df_y.columns))
-        myModel.batch_size = trial.suggest_int('batch_size', 32, 512, 20)
-        myModel.learning_rate = trial.suggest_loguniform('lr', 1e-4, 1e-2)
         myModel.run_training(train_x, train_y, test_x, test_y)
         
         loss, auc = myModel.get_eval(test_x, test_y)
-        losses.append(loss)
-        aucs.append(auc)
+        fold_losses.append(loss)
+        fold_aucs.append(auc)
 
         print("Fold " + str(i) + ": " + str(loss) + " loss, " + str(auc) + " auc")
-    print(losses, aucs)
+    
+    print(fold_losses, fold_aucs)
 
-    return (sum(losses)/len(losses))
+def full_test():
+    df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
+    df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
 
-def param_tuning():
-    study = optuna.create_study()
-    study.optimize(tuning_objective, n_trials=60)
-    print(study.best_params)
+    seed_losses = []
+    seed_aucs = []
+    seeds = 3
+    for seed in range(seeds):
+        datasets = get_folds(df_x, df_y, 5)
+        fold_losses = []
+        fold_aucs = []
+        i = 0
+        for fold in datasets:
+            i += 1
+            train_x, train_y = fold['train']
+            test_x, test_y = fold['test']
+            
+            myModel = Model(len(df_x.columns), len(df_y.columns))
+            myModel.run_training(train_x, train_y, test_x, test_y)
+            
+            loss, auc = myModel.get_eval(test_x, test_y)
+            fold_losses.append(loss)
+            fold_aucs.append(auc)
 
-def run_test():
-    param_tuning()
+            print("Seed " + str(seed+1) + " Fold " + str(i) + ": " + str(loss) + " loss, " + str(auc) + " auc")
+        
+        seed_losses.append(sum(fold_losses)/len(fold_losses))
+        fold_aucs.append(sum(fold_aucs)/len(fold_aucs))
+        print("Seed " + str(seed+1))
+        print(sum(fold_losses)/len(fold_losses), sum(fold_aucs)/len(fold_aucs))
+    print("Average performance: " + str(sum(seed_losses)/seeds) + ", " + str(sum(seed_aucs)/seeds))
 
-run_test()
+full_test()

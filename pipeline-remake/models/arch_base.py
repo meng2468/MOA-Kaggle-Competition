@@ -8,10 +8,12 @@ from sklearn import metrics
 
 class Model:
     def __init__(self, features, targets):
-        #Learning Rate and Dropout Optimised for Batch 2k
+        # 2k batch size
         self.dropout = 0.1694205906705529
-        self.learning_rate = 0.003190630348140866
-        self.batch_size = 2000
+        # self.learning_rate = 0.003190630348140866 
+        # self.dropout = 0.3960508154819118
+        self.learning_rate = 0.004248435178213642
+        self.batch_size = 474
 
         
         inputs = keras.Input(shape=(features))
@@ -32,7 +34,7 @@ class Model:
         self.model.compile(
                 loss=keras.losses.BinaryCrossentropy(),
                 optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate),
-                metrics=[keras.metrics.Precision(), keras.metrics.Recall()],
+                # metrics=[keras.metrics.Precision(), keras.metrics.Recall()],
             )
 
         early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
@@ -50,7 +52,7 @@ class Model:
         return self.model
 
     def get_eval(self, df_test_x, df_test_y):
-        loss = self.model.evaluate(df_test_x.to_numpy(), df_test_y.to_numpy(), verbose=1)[0]
+        loss = self.model.evaluate(df_test_x.to_numpy(), df_test_y.to_numpy(), verbose=1)#[0]
         
         m = tf.keras.metrics.AUC()
         m.update_state(df_test_y.to_numpy(), self.model.predict(df_test_x))
