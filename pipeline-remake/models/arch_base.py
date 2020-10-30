@@ -11,6 +11,7 @@ class Model:
         self.dropout = params['dropout']
         self.learning_rate = params['learning_rate']
         self.batch_size = params['batch_size']
+        self.label_smoothing = params['label_smoothing']
 
         
         inputs = keras.Input(shape=(features))
@@ -29,7 +30,7 @@ class Model:
     
     def run_training(self, df_train_x, df_train_y, df_test_x, df_test_y):
         self.model.compile(
-                loss=keras.losses.BinaryCrossentropy(),
+                loss=keras.losses.BinaryCrossentropy(label_smoothing=self.label_smoothing),
                 optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate),
             )
 
@@ -43,13 +44,15 @@ class Model:
         batch_size=self.batch_size,
         epochs=100,
         validation_data=(df_test_x, df_test_y),
-        callbacks=[early_stop, reduce_lr])
+        callbacks=[early_stop,reduce_lr])
 
         return self.model
 
     def get_eval(self, df_test_x, df_test_y):
-        loss = self.model.evaluate(df_test_x.to_numpy(), df_test_y.to_numpy(), verbose=1)#[0]
-        
+        # loss = self.model.evaluate(df_test_x.to_numpy(), df_test_y.to_numpy(), verbose=1)#[0]
+        m = tf.keras.metrics.BinaryCrossentropy()
+        m.update_state(df_test_y.to_numpy(), self.model.predict(df_test_x))
+        loss = m.result().numpy()
         m = tf.keras.metrics.AUC()
         m.update_state(df_test_y.to_numpy(), self.model.predict(df_test_x))
         auc = m.result().numpy()

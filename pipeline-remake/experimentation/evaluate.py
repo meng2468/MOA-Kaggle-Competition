@@ -6,10 +6,10 @@ import sys
 sys.path.insert(1, '../models')
 from arch_base import Model
 
-df_x = pd.read_csv('../processing/feature_eng_temp_rob_x.csv')
-df_y = pd.read_csv('../processing/feature_eng_temp_y.csv')
-
 def quick_test(params):
+    df_x = pd.read_csv(params['feature_csv'])
+    df_y = pd.read_csv(params['target_csv'])
+
     datasets = get_strat_folds(df_x, df_y, 5)
     fold_losses = []
     fold_aucs = []
@@ -34,6 +34,9 @@ def quick_test(params):
     print(fold_losses, fold_aucs)
 
 def full_test(params):
+    df_x = pd.read_csv(params['feature_csv'])
+    df_y = pd.read_csv(params['target_csv'])
+
     seed_losses = []
     seed_aucs = []
     seeds = 3
@@ -48,9 +51,6 @@ def full_test(params):
             test_x, test_y = fold['test']
             
             myModel = Model(len(df_x.columns), len(df_y.columns), params)
-            myModel.dropout = params['dropout']
-            myModel.learning_rate = params['learning_rate']
-            myModel.batch_size = params['batch_size']
             myModel.run_training(train_x, train_y, test_x, test_y)
             
             loss, auc = myModel.get_eval(test_x, test_y)
@@ -66,34 +66,34 @@ def full_test(params):
         print(sum(fold_losses)/len(fold_losses), sum(fold_aucs)/len(fold_aucs))
         
     print("Average performance: " + str(sum(seed_losses)/seeds) + ", " + str(sum(seed_aucs)/seeds))
+    log_evaluation(params, sum(seed_losses)/seeds, sum(seed_aucs)/seeds)
+
+def log_evaluation(params, loss, auc):
+    print('log_evaluation: writing experiment to csv')
+    df = pd.read_csv('../logs/experiment_results.csv')
+    params['loss'] = loss
+    params['auc'] = auc
+    df = df.append(params, ignore_index=True)
+    df.to_csv('../logs/experiment_results.csv', index=False)
 
 params = {}
+#Select data
+params['feature_csv'] = '../processing/feature_eng_gpca_x.csv'
+params['target_csv'] = '../processing/feature_eng_y.csv'
 
+# Select hyperparameters
 params['dropout'] = 0.2093013646952079
-params['learning_rate'] = 0.003305851970846805
+params['learning_rate'] = .003305851970846805
 params['batch_size'] = 900
-full_test(params)
+params['label_smoothing'] = 0
 
+#Info for logging
+params['extra_inf'] = ''
+
+full_test(params)
 
 #Current best (No robust scaling):
 # params['dropout'] = 0.2093013646952079
 # params['learning_rate'] = 0.003305851970846805
 # params['batch_size'] = 900
 # Average performance: 0.016828974584738414, 0.8263675848642985
-
-# params['dropout'] = 0.19
-# params['learning_rate'] = 0.004
-# params['batch_size'] = 900
-# Average performance: 0.016857877746224405, 0.8266015211741129
-# Average performance: 0.01684053341547648, 0.8256617387135824
-
-#Current best (Robust scaling):
-# params['dropout'] = 0.19
-# params['learning_rate'] = 0.004
-# params['batch_size'] = 900
-# Average performance: 0.01713248814145724, 0.8303231239318848
-
-# params['dropout'] = 0.2093013646952079
-# params['learning_rate'] = 0.003305851970846805
-# params['batch_size'] = 900
-# Average performance: 0.017142449940244355, 0.8301983118057251
