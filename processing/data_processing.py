@@ -7,6 +7,7 @@ from .data_reader import get_genes_cell_header
 # from sklearn import preprocessing
 # from sklearn.metrics import log_loss
 # from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import QuantileTransformer
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import VarianceThreshold
 
@@ -44,6 +45,15 @@ def get_PCA_features(data, n_comp, suffix="pca-", random_state=42):
     '''
     features_pca = PCA(n_components=n_comp, random_state=random_state).fit_transform(data)
     return pd.DataFrame(features_pca, columns=[f'{suffix}{i}' for i in range(n_comp)])
+
+### ========================================== Feature Scaling
+
+### =========== Gauss Rank ============
+def gauss_rank(data):
+    print("Apply Gauss Rank Transformation")
+    transformer = QuantileTransformer(n_quantiles=100,random_state=0, output_distribution="normal")
+    transformer.fit(data)
+    return transformer.transform(data)
 
 ### ========================================== Feature Selection
 
@@ -133,12 +143,15 @@ def preprocessing_pipeline(train_features, train_targets, test_features):
 
     data = pd.concat((train_features, test_features))
 
+    data.iloc[:,4:] = gauss_rank(data.iloc[:,4:])
+
     ## TODO: save removed columns for testset transfromation
-    data = remove_variance_encoding(data)
+    data = remove_variance_encoding(data, 0.8)
 
     ## TODO: save PCA value for testset transfromation
-    data = add_PCA_feature(data)
+    data = add_PCA_feature(data, g_n_comp=300, c_n_comp=50)
 
+    data = remove_variance_encoding(data, 0.8)
 
     train_features, test_features = split_moa_train_test(data, train_len, test_len)
 
