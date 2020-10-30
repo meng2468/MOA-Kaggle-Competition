@@ -10,6 +10,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
+from torch.nn.modules.loss import _WeightedLoss
+
 import sys
 sys.path.append("..")
 from processing.stratified_kfold import get_stratified_kfold_index
@@ -190,7 +192,13 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e3,
                                               max_lr=1e-2, epochs=PARAM["EPOCHS"], steps_per_epoch=len(trainloader))
 
+
     loss_fn = nn.BCEWithLogitsLoss()
+    loss_tr = nn.BCEWithLogitsLoss()
+
+    loss_smooth = PARAM.get("LOSS_SMOOTHING", 0)
+    if loss_smooth > 0:
+        loss_tr = SmoothBCEwLogits(smoothing =loss_smooth)
 
     early_stopping_steps = PARAM["EARLY_STOPPING_STEPS"]
     early_step = 0
@@ -200,7 +208,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
     best_loss = np.inf
     for epoch in range(PARAM["EPOCHS"]):
 
-        train_loss = torch_train(model, optimizer,scheduler, loss_fn, trainloader, PARAM["DEVICE"])
+        train_loss = torch_train(model, optimizer,scheduler, loss_tr, trainloader, PARAM["DEVICE"])
         valid_loss, valid_preds = torch_valid(model, loss_fn, validloader, PARAM["DEVICE"])
         print(f"FOLD: {kfold}, EPOCH: {epoch}, train_loss: {train_loss}\tvalid_loss: {valid_loss}")
 
@@ -254,6 +262,32 @@ def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
 
     predictions = torch_inference(model, testloader, PARAM["DEVICE"])
     return predictions
+
+class SmoothBCEwLogits(_WeightedLoss):
+    def __init__(self, weight=None, reduction='mean', smoothing=0.0):
+        super().__init__(weight=weight, reduction=reduction)
+        self.smoothing = smoothing
+        self.weight = weight
+        self.reduction = reduction
+
+    @staticmethod
+    def _smooth(targets:torch.Tensor, n_labels:int, smoothing=0.0):
+        assert 0 <= smoothing < 1
+        with torch.no_grad():
+            targets = targets * (1.0 - smoothing) + 0.5 * smoothing
+        return targets
+
+    def forward(self, inputs, targets):
+        targets = SmoothBCEwLogits._smooth(targets, inputs.size(-1),
+            self.smoothing)
+        loss = F.binary_cross_entropy_with_logits(inputs, targets,self.weight)
+
+        if  self.reduction == 'sum':
+            loss = loss.sum()
+        elif  self.reduction == 'mean':
+            loss = loss.mean()
+
+        return loss
 
 def get_log_loss(Y, pred):
     if type(Y) == pd.DataFrame:
