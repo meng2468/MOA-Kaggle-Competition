@@ -11,12 +11,17 @@ df_y = pd.read_csv('../processing/feature_eng_y.csv')
 
 def tuning_objective(trial):
     params = {}
+    # Select data
+    params['feature_csv'] = '../processing/feature_eng_gpca_x.csv'
+    params['target_csv'] = '../processing/feature_eng_y.csv'
 
-    params['batch_size'] = 500
-    # params['learning_rate'] = 0.04
+    # Select hyperparameters
     params['dropout'] = 0.25
-    params['label_smoothing'] = 0.001
-
+    params['learning_rate'] = .003305851970846805
+    params['batch_size'] = 500
+    params['label_smoothing'] = 0
+    
+    # Select tuning
     # params['batch_size'] = trial.suggest_int('batch_size', 200, 1200, 100)
     params['learning_rate'] = trial.suggest_loguniform('lr', 1e-4, 1e-2)
     # params['dropout'] = trial.suggest_float('dropout', 0.1, .4)
