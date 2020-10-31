@@ -44,7 +44,7 @@ def get_PCA_features(data, n_comp, suffix="pca-", random_state=42):
     return n_comp number of PCA components
     '''
     features_pca = PCA(n_components=n_comp, random_state=random_state).fit_transform(data)
-    return pd.DataFrame(features_pca, columns=[f'{suffix}{i}' for i in range(n_comp)])
+    return pd.DataFrame(features_pca, columns=[f'{suffix}{i}' for i in range(features_pca.shape[1])])
 
 ### ========================================== Feature Scaling
 
@@ -98,11 +98,11 @@ def add_PCA_feature(data, g_n_comp=50, c_n_comp=15):
 
     # gnenes
     pca_genes = get_PCA_features(data[GENES], g_n_comp, suffix="pca_G-")
-    print(f"Add #{g_n_comp} PCA G features")
+    print(f"Add #{pca_genes.shape[1]} PCA G features")
 
     # cells
     pca_cells = get_PCA_features(data[CELLS], c_n_comp, suffix="pca_C-")
-    print(f"Add #{c_n_comp} PCA C features")
+    print(f"Add #{pca_cells.shape[1]} PCA C features")
 
     data_wiht_pca = pd.concat((data.reset_index(drop=True, inplace=False) , pca_genes, pca_cells), axis=1)
 
@@ -143,15 +143,11 @@ def preprocessing_pipeline(train_features, train_targets, test_features):
 
     data = pd.concat((train_features, test_features))
 
+    data = remove_variance_encoding(data, 0.8)
+    data = add_PCA_feature(data, g_n_comp=0.9, c_n_comp=0.9)
+    data = remove_variance_encoding(data, 0.8)
+
     data.iloc[:,4:] = gauss_rank(data.iloc[:,4:])
-
-    ## TODO: save removed columns for testset transfromation
-    data = remove_variance_encoding(data, 0.8)
-
-    ## TODO: save PCA value for testset transfromation
-    data = add_PCA_feature(data, g_n_comp=300, c_n_comp=50)
-
-    data = remove_variance_encoding(data, 0.8)
 
     train_features, test_features = split_moa_train_test(data, train_len, test_len)
 
@@ -163,5 +159,5 @@ def preprocessing_pipeline(train_features, train_targets, test_features):
     test_features = drop_cp_type(test_features)
     test_features = one_hot_encode_moa(test_features)
 
-
+    print("SIZE :", "TRAIN", train_features.shape)
     return train_features, train_targets, test_features
