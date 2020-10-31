@@ -129,6 +129,8 @@ def torch_inference(model, dataloader, device):
 class Model(nn.Module):
     def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
         super(Model, self).__init__()
+        self.relu_type = relu_type
+
         self.batch_norm1 = nn.BatchNorm1d(num_features)
 #         self.dropout1 = nn.Dropout(0.2)
         self.dense1 = nn.utils.weight_norm(nn.Linear(num_features, hidden_size))
@@ -144,14 +146,14 @@ class Model(nn.Module):
     def forward(self, x):
         x = self.batch_norm1(x)
 #         x = self.dropout1(x)
-        if relu_type == "LEAKY":
+        if self.relu_type == "LEAKY":
             x = F.leaky_relu(self.dense1(x))
         else:
             x = F.relu(self.dense1(x))
 
         x = self.batch_norm2(x)
         x = self.dropout2(x)
-        if relu_type == "LEAKY":
+        if self.relu_type == "LEAKY":
             x = F.leaky_relu(self.dense2(x))
         else:
             x = F.relu(self.dense2(x))
@@ -265,6 +267,7 @@ def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
         num_features=PARAM["NUM_FEATURE"],
         num_targets=PARAM["NUM_TARAGET"],
         hidden_size=PARAM["HIDDENT_SIZE"],
+        relu_type=PARAM.get("RELU_TYPE", "BASIC"),
     )
 
     model.load_state_dict(torch.load(saved_model))
