@@ -33,6 +33,8 @@ DEFAULT_PARAM = {
     "NUM_FEATURE" : 930,
     "NUM_TARAGET" : 206,
     "HIDDENT_SIZE" : 1024,
+    "DROPOUT" : 0.25,
+    "RELU_TYPE": "LEAKY", # "BASIC" | "LEAKY"
 }
 
 def seed_everything(seed=42):
@@ -125,28 +127,34 @@ def torch_inference(model, dataloader, device):
     return preds
 
 class Model(nn.Module):
-    def __init__(self, num_features, num_targets, hidden_size):
+    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
         super(Model, self).__init__()
         self.batch_norm1 = nn.BatchNorm1d(num_features)
 #         self.dropout1 = nn.Dropout(0.2)
         self.dense1 = nn.utils.weight_norm(nn.Linear(num_features, hidden_size))
 
         self.batch_norm2 = nn.BatchNorm1d(hidden_size)
-        self.dropout2 = nn.Dropout(0.5)
+        self.dropout2 = nn.Dropout(dropout)
         self.dense2 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
 
         self.batch_norm3 = nn.BatchNorm1d(hidden_size)
-        self.dropout3 = nn.Dropout(0.5)
+        self.dropout3 = nn.Dropout(dropout)
         self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
 
     def forward(self, x):
         x = self.batch_norm1(x)
 #         x = self.dropout1(x)
-        x = F.relu(self.dense1(x))
+        if relu_type = "LEAKY":
+            x = F.leaky_relu(self.dense1(x))
+        else:
+            x = F.relu(self.dense1(x))
 
         x = self.batch_norm2(x)
         x = self.dropout2(x)
-        x = F.relu(self.dense2(x))
+        if relu_type = "LEAKY":
+            x = F.leaky_relu(self.dense2(x))
+        else:
+            x = F.relu(self.dense2(x))
 
         x = self.batch_norm3(x)
         x = self.dropout3(x)
@@ -182,6 +190,8 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
         num_features=PARAM["NUM_FEATURE"],
         num_targets=PARAM["NUM_TARAGET"],
         hidden_size=PARAM["HIDDENT_SIZE"],
+        dropout=PARAM.get("DROPOUT", 0.5),
+        relu_type=PARAM.get("RELU_TYPE", "BASIC"),
     )
     model.to(PARAM["DEVICE"])
 
