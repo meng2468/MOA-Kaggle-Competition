@@ -78,13 +78,13 @@ def log_evaluation(params, loss, auc):
 
 params = {}
 #Select data
-params['feature_csv'] = '../processing/feature_eng_gpca_x.csv'
+params['feature_csv'] = '../processing/feature_eng_ogpca_x.csv'
 params['target_csv'] = '../processing/feature_eng_y.csv'
 
 # Select hyperparameters
-params['dropout'] = 0.2093013646952079
-params['learning_rate'] = .003305851970846805
-params['batch_size'] = 900
+params['dropout'] = 0.11916016032516948
+params['learning_rate'] = 0.003903996608447723
+params['batch_size'] = 500
 params['label_smoothing'] = 0
 
 #Info for logging

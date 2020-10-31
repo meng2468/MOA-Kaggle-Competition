@@ -50,7 +50,7 @@ def tuning_objective(trial):
 
 def param_tuning():
     study = optuna.create_study()
-    study.optimize(tuning_objective, n_trials=50)
+    study.optimize(tuning_objective, n_trials=160)
     print(study.best_params)
 
 param_tuning()
