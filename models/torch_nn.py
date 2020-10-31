@@ -144,14 +144,14 @@ class Model(nn.Module):
     def forward(self, x):
         x = self.batch_norm1(x)
 #         x = self.dropout1(x)
-        if relu_type = "LEAKY":
+        if relu_type == "LEAKY":
             x = F.leaky_relu(self.dense1(x))
         else:
             x = F.relu(self.dense1(x))
 
         x = self.batch_norm2(x)
         x = self.dropout2(x)
-        if relu_type = "LEAKY":
+        if relu_type == "LEAKY":
             x = F.leaky_relu(self.dense2(x))
         else:
             x = F.relu(self.dense2(x))
