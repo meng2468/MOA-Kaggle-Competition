@@ -33,6 +33,7 @@ DEFAULT_PARAM = {
     "NUM_FEATURE" : 930,
     "NUM_TARAGET" : 206,
     "HIDDENT_SIZE" : 1024,
+    "LOSS_SMOOTHING": 0.001, # remove if not apply loss smoothing
     "DROPOUT" : 0.25,
     "RELU_TYPE": "LEAKY", # "BASIC" | "LEAKY"
 }
