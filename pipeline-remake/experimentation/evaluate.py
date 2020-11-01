@@ -78,27 +78,26 @@ def log_evaluation(params, loss, auc):
 
 params = {}
 #Select data
-params['feature_csv'] = '../processing/feature_eng_gpca10050_x.csv'
+# params['feature_csv'] = '../processing/gauss_pca2/v1.8g100c40.csv'
 params['target_csv'] = '../processing/feature_eng_y.csv'
 
 # Select hyperparameters
 params['dropout'] = 0.2
-params['learning_rate'] = 0.0035
-params['batch_size'] = 500
+params['learning_rate'] = 0.003
+params['batch_size'] = 1250
 params['label_smoothing'] = 0
 
 #Info for logging
 params['extra_inf'] = ''
 
-vars = [.5,1,2]
-gpcas = [100,150,200]
-cpcas = [25,50,75]
+def evaluate(vars, gpcas, cpcas):
+    for var in vars:
+        for gpca in gpcas:
+            for cpca in cpcas:
+                path = '../processing/real_gauss_pca/v'+str(var)+'g'+str(gpca)+'c'+str(cpca)+'.csv'
+                params['feature_csv'] = path
+                
+                full_test(params)
 
-for var in vars:
-    for gpca in gpcas:
-        for cpca in cpcas:
-            path = '../processing/gauss_pca/v'+str(var)+'g'+str(gpca)+'c'+str(cpca)+'.csv'
-            params['feature_csv'] = path
-            
-            full_test(params)
+evaluate([.4,.5,.6], [100,120], [50,60])
 

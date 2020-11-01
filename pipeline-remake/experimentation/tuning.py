@@ -6,27 +6,26 @@ import sys
 sys.path.insert(1, '../models')
 from arch_base import Model
 
-df_x = pd.read_csv('../processing/feature_eng_temp_x.csv')
-df_y = pd.read_csv('../processing/feature_eng_y.csv')
-
 def tuning_objective(trial):
     params = {}
     # Select data
-    params['feature_csv'] = '../processing/feature_eng_gpca_x.csv'
+    params['feature_csv'] = '../processing/real_gauss_pca/v0.8g500c60.csv'
     params['target_csv'] = '../processing/feature_eng_y.csv'
 
     # Select hyperparameters
-    params['dropout'] = 0.25
+    params['dropout'] = 0.2
     params['learning_rate'] = .003305851970846805
     params['batch_size'] = 500
     params['label_smoothing'] = 0
     
     # Select tuning
     # params['batch_size'] = trial.suggest_int('batch_size', 200, 1200, 100)
-    params['learning_rate'] = trial.suggest_loguniform('lr', 1e-4, 1e-2)
+    params['learning_rate'] = trial.suggest_loguniform('lr', 2e-4, 5e-3)
     # params['dropout'] = trial.suggest_float('dropout', 0.1, .4)
     # params['label_smoothing'] = trial.suggest_float('label_smoothing', 0,.002)
 
+    df_x = pd.read_csv(params['feature_csv'])
+    df_y = pd.read_csv(params['target_csv'])
     datasets = get_strat_folds(df_x, df_y, 5)
     losses = []
     aucs = []
@@ -50,7 +49,7 @@ def tuning_objective(trial):
 
 def param_tuning():
     study = optuna.create_study()
-    study.optimize(tuning_objective, n_trials=160)
+    study.optimize(tuning_objective, n_trials=30)
     print(study.best_params)
 
 param_tuning()
