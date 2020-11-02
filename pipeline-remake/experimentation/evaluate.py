@@ -83,9 +83,9 @@ params['target_csv'] = '../processing/feature_eng_y.csv'
 
 # Select hyperparameters
 params['dropout'] = 0.2
-params['learning_rate'] = 0.003
-params['batch_size'] = 1250
-params['label_smoothing'] = 0
+params['learning_rate'] = 0.003909
+params['batch_size'] = 1200
+params['label_smoothing'] = 0.00002
 
 #Info for logging
 params['extra_inf'] = ''
@@ -99,5 +99,5 @@ def evaluate(vars, gpcas, cpcas):
                 
                 full_test(params)
 
-evaluate([.4,.5,.6], [100,120], [50,60])
+evaluate([.8], [500], [60])
 
