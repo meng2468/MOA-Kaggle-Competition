@@ -175,8 +175,6 @@ class Model_Res(nn.Module):
     def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
         super(Model_Res, self).__init__()
 
-        print("INIT RESNET")
-
         self.relu_type = relu_type
 
         self.batch_norm1 = nn.BatchNorm1d(num_features)
@@ -329,7 +327,7 @@ def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
     testloader = torch.utils.data.DataLoader(testdataset, batch_size=PARAM["BATCH_SIZE"], shuffle=False)
 
     model_type = PARAM.get("MODEL", "NN")
-    if model_type == 'RES':
+    if model_type == 'RESNET':
         model = Model_Res(
             num_features=PARAM["NUM_FEATURE"],
             num_targets=PARAM["NUM_TARAGET"],
