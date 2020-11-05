@@ -173,6 +173,9 @@ class Model(nn.Module):
 class Model_Res(nn.Module):
     def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
         super(Model, self).__init__()
+
+        print("INIT RESNET")
+
         self.relu_type = relu_type
 
         self.batch_norm1 = nn.BatchNorm1d(num_features)
@@ -239,8 +242,8 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
     trainloader, validloader = kfold_train_valid_dataloader(X, Y, val_mask, PARAM["BATCH_SIZE"])
 
     model_type = PARAM.get("MODEL", "NN")
-    if model_type == 'RES':
-        print("RES MODEL")
+    if model_type == 'RESNET':
+        print("RESNET MODEL")
         model = Model_Res(
             num_features=PARAM["NUM_FEATURE"],
             num_targets=PARAM["NUM_TARAGET"],
