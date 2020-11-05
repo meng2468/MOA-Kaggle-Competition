@@ -189,7 +189,9 @@ class Model_Res(nn.Module):
         self.dropout3 = nn.Dropout(dropout)
         self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
 
-        self.conv = nn.Conv1d(hidden_size, num_targets, 3)
+#         self.conv = nn.Conv1d(hidden_size, num_targets, 3)
+        self.pool = nn.MaxPool1d(3)
+        self.dense4 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
 
     def forward(self, x):
         x1 = self.batch_norm1(x)
@@ -211,8 +213,12 @@ class Model_Res(nn.Module):
         x3 = self.dense3(x3)
 
         stack = torch.stack([x1,x2,x3], dim=2)
-        y = self.conv(stack)
+#         y = self.conv(stack)
+        y = self.pool(stack)
         y = y.squeeze(-1)
+
+
+        y = self.dense4(y)
 
         return y
 
