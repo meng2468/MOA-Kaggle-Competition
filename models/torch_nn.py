@@ -30,6 +30,7 @@ DEFAULT_PARAM = {
     "NFOLDS" :  5,
 
     ## Model
+    "MODEL": "RESNET",
     "NUM_FEATURE" : 930,
     "NUM_TARAGET" : 206,
     "HIDDENT_SIZE" : 1024,
@@ -172,7 +173,7 @@ class Model(nn.Module):
 
 class Model_Res(nn.Module):
     def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
-        super(Model, self).__init__()
+        super(Model_Res, self).__init__()
 
         print("INIT RESNET")
 
