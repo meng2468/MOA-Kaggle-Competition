@@ -112,8 +112,8 @@ def to_csv(var, gpca, cpca):
     # df_y.to_csv('feature_eng_y.csv', index=False)
 
 vars = [.8]
-gpcas = [450]
-cpcas = [55]
+gpcas = [300]
+cpcas = [40]
 
 for var in vars:
     for gpca in gpcas:

@@ -1,9 +1,14 @@
 import pandas as pd
+import numpy as np
+np.random.seed(1001)
+import tensorflow as tf
+tf.random.set_seed(221)
 from crossvalidation import *
 import keras
 import optuna
 import sys
 sys.path.insert(1, '../models')
+
 from arch_base import Model
 
 def quick_test(params):
@@ -82,10 +87,10 @@ params = {}
 params['target_csv'] = '../processing/feature_eng_y.csv'
 
 # Select hyperparameters
-params['dropout'] = 0.2
-params['learning_rate'] = 0.003909
-params['batch_size'] = 1200
-params['label_smoothing'] = 0.00002
+params['dropout'] = 0.054030
+params['learning_rate'] = 0.0013864656415113995
+params['batch_size'] = 200
+params['label_smoothing'] = 0.002577
 
 #Info for logging
 params['extra_inf'] = ''
@@ -99,5 +104,5 @@ def evaluate(vars, gpcas, cpcas):
                 
                 full_test(params)
 
-evaluate([.8], [500], [60])
+evaluate([.8], [450], [55])
 

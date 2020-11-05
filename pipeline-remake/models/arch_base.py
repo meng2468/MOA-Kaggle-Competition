@@ -17,14 +17,14 @@ class Model:
         
         inputs = keras.Input(shape=(features))
         x = layers.BatchNormalization()(inputs)
-        x = layers.Dropout(self.dropout)(x)
+        x = tfa.layers.WeightNormalization(layers.Dense(1024, activation="relu"))(x)
 
-        x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
         x = layers.BatchNormalization()(x)
         x = layers.AlphaDropout(self.dropout)(x)
+        x = tfa.layers.WeightNormalization(layers.Dense(1024, activation="relu"))(x)
 
-        x = tfa.layers.WeightNormalization(layers.Dense(1024, activation='elu'))(x)
         x = layers.BatchNormalization()(x)
+        x = layers.AlphaDropout(self.dropout)(x)
         outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation="sigmoid"))(x)
 
         self.model = keras.Model(inputs=inputs, outputs=outputs, name="base")
@@ -46,7 +46,7 @@ class Model:
         df_train_x.to_numpy(),
         df_train_y.to_numpy(),
         batch_size=self.batch_size,
-        epochs=60,
+        epochs=40,
         validation_data=(df_test_x, df_test_y),
         callbacks=[early_stop,reduce_lr])
 
