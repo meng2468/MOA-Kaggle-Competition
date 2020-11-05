@@ -3,3 +3,5 @@
 *__pycache__
 *.pyc
 models/pre-trained
+*.pth
+test.py
