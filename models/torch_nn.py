@@ -145,25 +145,74 @@ class Model(nn.Module):
         self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
 
     def forward(self, x):
-        x = self.batch_norm1(x)
-#         x = self.dropout1(x)
+        x1 = self.batch_norm1(x)
+#         x1 = self.dropout1(x1)
         if self.relu_type == "LEAKY":
-            x = F.leaky_relu(self.dense1(x))
+            x1 = F.leaky_relu(self.dense1(x1))
         else:
-            x = F.relu(self.dense1(x))
+            x1 = F.relu(self.dense1(x1))
 
-        x = self.batch_norm2(x)
-        x = self.dropout2(x)
+        x2 = self.batch_norm2(x1)
+        x2 = self.dropout2(x2)
         if self.relu_type == "LEAKY":
-            x = F.leaky_relu(self.dense2(x))
+            x2 = F.leaky_relu(self.dense2(x2))
         else:
-            x = F.relu(self.dense2(x))
+            x2 = F.relu(self.dense2(x2))
 
-        x = self.batch_norm3(x)
-        x = self.dropout3(x)
-        x = self.dense3(x)
+        x3 = self.batch_norm3(x2)
+        x3 = self.dropout3(x3)
+        x3 = self.dense3(x3)
 
-        return x
+        print(x1.shape)
+        print(x2.shape)
+        print(x3.shape)
+
+
+        return x3
+
+class Model_Res(nn.Module):
+    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
+        super(Model, self).__init__()
+        self.relu_type = relu_type
+
+        self.batch_norm1 = nn.BatchNorm1d(num_features)
+#         self.dropout1 = nn.Dropout(0.2)
+        self.dense1 = nn.utils.weight_norm(nn.Linear(num_features, hidden_size))
+
+        self.batch_norm2 = nn.BatchNorm1d(hidden_size)
+        self.dropout2 = nn.Dropout(dropout)
+        self.dense2 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
+
+        self.batch_norm3 = nn.BatchNorm1d(hidden_size)
+        self.dropout3 = nn.Dropout(dropout)
+        self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
+
+        self.conv = nn.Conv1d(hidden_size, num_targets, 3)
+
+    def forward(self, x):
+        x1 = self.batch_norm1(x)
+#         x1 = self.dropout1(x1)
+        if self.relu_type == "LEAKY":
+            x1 = F.leaky_relu(self.dense1(x1))
+        else:
+            x1 = F.relu(self.dense1(x1))
+
+        x2 = self.batch_norm2(x1)
+        x2 = self.dropout2(x2)
+        if self.relu_type == "LEAKY":
+            x2 = F.leaky_relu(self.dense2(x2))
+        else:
+            x2 = F.relu(self.dense2(x2))
+
+        x3 = self.batch_norm3(x2)
+        x3 = self.dropout3(x3)
+        x3 = self.dense3(x3)
+
+        stack = torch.stack([x1,x2,x3], dim=2)
+        y = self.conv(stack)
+        y = y.squeeze(-1)
+
+        return y
 
 def kfold_train_valid_dataloader(X, Y, valid_mask, batch_size):
     '''
@@ -189,13 +238,23 @@ def kfold_train_valid_dataloader(X, Y, valid_mask, batch_size):
 def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
     trainloader, validloader = kfold_train_valid_dataloader(X, Y, val_mask, PARAM["BATCH_SIZE"])
 
-    model = Model(
-        num_features=PARAM["NUM_FEATURE"],
-        num_targets=PARAM["NUM_TARAGET"],
-        hidden_size=PARAM["HIDDENT_SIZE"],
-        dropout=PARAM.get("DROPOUT", 0.5),
-        relu_type=PARAM.get("RELU_TYPE", "BASIC"),
-    )
+    model_type = PARAM.get("MODEL", "NN")
+    if model_type == 'RES':
+        model = Model_Res(
+            num_features=PARAM["NUM_FEATURE"],
+            num_targets=PARAM["NUM_TARAGET"],
+            hidden_size=PARAM["HIDDENT_SIZE"],
+            dropout=PARAM.get("DROPOUT", 0.5),
+            relu_type=PARAM.get("RELU_TYPE", "BASIC"),
+        )
+    else:
+        model = Model(
+            num_features=PARAM["NUM_FEATURE"],
+            num_targets=PARAM["NUM_TARAGET"],
+            hidden_size=PARAM["HIDDENT_SIZE"],
+            dropout=PARAM.get("DROPOUT", 0.5),
+            relu_type=PARAM.get("RELU_TYPE", "BASIC"),
+        )
     model.to(PARAM["DEVICE"])
 
     optimizer = torch.optim.Adam(model.parameters(),
@@ -264,13 +323,21 @@ def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
     testdataset = TestDataset(X.values)
     testloader = torch.utils.data.DataLoader(testdataset, batch_size=PARAM["BATCH_SIZE"], shuffle=False)
 
-    model = Model(
-        num_features=PARAM["NUM_FEATURE"],
-        num_targets=PARAM["NUM_TARAGET"],
-        hidden_size=PARAM["HIDDENT_SIZE"],
-        relu_type=PARAM.get("RELU_TYPE", "BASIC"),
-    )
-
+    model_type = PARAM.get("MODEL", "NN")
+    if model_type == 'RES':
+        model = Model_Res(
+            num_features=PARAM["NUM_FEATURE"],
+            num_targets=PARAM["NUM_TARAGET"],
+            hidden_size=PARAM["HIDDENT_SIZE"],
+            relu_type=PARAM.get("RELU_TYPE", "BASIC"),
+        )
+    else:
+        model = Model(
+            num_features=PARAM["NUM_FEATURE"],
+            num_targets=PARAM["NUM_TARAGET"],
+            hidden_size=PARAM["HIDDENT_SIZE"],
+            relu_type=PARAM.get("RELU_TYPE", "BASIC"),
+        )
     model.load_state_dict(torch.load(saved_model))
     model.to(PARAM["DEVICE"])
 
