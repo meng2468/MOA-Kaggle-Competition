@@ -190,7 +190,7 @@ class Model_Res(nn.Module):
         self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
 
 #         self.conv = nn.Conv1d(hidden_size, num_targets, 3)
-        self.pool = nn.MaxPool1d(3)
+        self.pool = nn.AvgPool1d(3)
         self.dense4 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
 
     def forward(self, x):
