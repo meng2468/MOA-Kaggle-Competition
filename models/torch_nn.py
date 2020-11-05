@@ -240,6 +240,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
 
     model_type = PARAM.get("MODEL", "NN")
     if model_type == 'RES':
+        print("RES MODEL")
         model = Model_Res(
             num_features=PARAM["NUM_FEATURE"],
             num_targets=PARAM["NUM_TARAGET"],
