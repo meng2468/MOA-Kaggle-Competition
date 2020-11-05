@@ -158,6 +158,6 @@ def preprocessing_pipeline(train_features, train_targets, test_features):
 
     test_features = drop_cp_type(test_features)
     test_features = one_hot_encode_moa(test_features)
-
+    
     print("SIZE :", "TRAIN", train_features.shape)
     return train_features, train_targets, test_features

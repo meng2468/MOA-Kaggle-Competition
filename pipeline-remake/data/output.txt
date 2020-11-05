@@ -1,0 +1,10 @@
+Script started on Thu Oct 29 17:43:43 2020
+[1m[7m%[27m[1m[0m                                                                                                                ]7;file://MacBook-Pro-2.local/Users/baconbaker/Documents/Studium/AML/Project/moa-pipeline/pipeline-remake/data[0m[27m[24m[Jbaconbaker@MacBook-Pro-2 data % [K[?2004hoopen output.txt[1m [0m[0m [?2004l
+[1m[7m%[27m[1m[0m                                                                                                                ]7;file://MacBook-Pro-2.local/Users/baconbaker/Documents/Studium/AML/Project/moa-pipeline/pipeline-remake/data[0m[27m[24m[Jbaconbaker@MacBook-Pro-2 data % [K[?2004hk[?2004l
+zsh: command not found: k
+[1m[7m%[27m[1m[0m                                                                                                                ]7;file://MacBook-Pro-2.local/Users/baconbaker/Documents/Studium/AML/Project/moa-pipeline/pipeline-remake/data[0m[27m[24m[Jbaconbaker@MacBook-Pro-2 data % [K[?2004hk[?2004l
+zsh: command not found: k
+[1m[7m%[27m[1m[0m                                                                                                                ]7;file://MacBook-Pro-2.local/Users/baconbaker/Documents/Studium/AML/Project/moa-pipeline/pipeline-remake/data[0m[27m[24m[Jbaconbaker@MacBook-Pro-2 data % [K[?2004hoopen output.txt[1m [0m[0m [?2004l
+[1m[7m%[27m[1m[0m                                                                                                                ]7;file://MacBook-Pro-2.local/Users/baconbaker/Documents/Studium/AML/Project/moa-pipeline/pipeline-remake/data[0m[27m[24m[Jbaconbaker@MacBook-Pro-2 data % [K[?2004heexit[?2004l
+
+Script done on Thu Oct 29 17:44:08 2020

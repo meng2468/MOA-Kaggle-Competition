@@ -44,7 +44,11 @@ def generate_train_csv():
     df_train_y.to_csv('./processed-input/proc_train_targets.csv', encoding='utf-8', index=False)
 
 #Return training datasets
-def get_training_data():
-    df_train_x = pd.read_csv('./processed-input/proc_train_features.csv')
-    df_train_y = pd.read_csv('./processed-input/proc_train_targets.csv')
+def get_training_data(kh):
+    if kh:
+        df_train_x = pd.read_csv('./processed-input/kh_train_features.csv')
+        df_train_y = pd.read_csv('./processed-input/kh_train_targets.csv')
+    else:
+        df_train_x = pd.read_csv('./processed-input/proc_train_features.csv')
+        df_train_y = pd.read_csv('./processed-input/proc_train_targets.csv')
     return df_train_x, df_train_y
