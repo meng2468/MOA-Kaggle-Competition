@@ -25,9 +25,6 @@ def quick_test(params):
         test_x, test_y = fold['test']
         
         myModel = Model(len(df_x.columns), len(df_y.columns), params)
-        myModel.dropout = params['dropout']
-        myModel.learning_rate = params['learning_rate']
-        myModel.batch_size = params['batch_size']
         myModel.run_training(train_x, train_y, test_x, test_y)
         
         loss, auc = myModel.get_eval(test_x, test_y)
@@ -46,7 +43,7 @@ def full_test(params):
     seed_aucs = []
     seeds = 3
     for seed in range(seeds):
-        datasets = get_strat_folds(df_x, df_y, 5)
+        datasets = get_strat_folds(df_x, df_y, 5, seed)
         fold_losses = []
         fold_aucs = []
         i = 0
@@ -87,10 +84,12 @@ params = {}
 params['target_csv'] = '../processing/feature_eng_y.csv'
 
 # Select hyperparameters
-params['dropout'] = 0.054030
-params['learning_rate'] = 0.0013864656415113995
-params['batch_size'] = 200
-params['label_smoothing'] = 0.002577
+params['dropout'] = 0.200000
+params['learning_rate'] = 0.003809
+params['batch_size'] = 1200
+params['label_smoothing'] = 0
+params['layers'] = 1
+params['neurons'] = 1024
 
 #Info for logging
 params['extra_inf'] = ''

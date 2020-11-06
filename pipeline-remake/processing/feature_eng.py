@@ -100,20 +100,20 @@ def get_eng_df(df_x, df_y, df_test_x, var, gpca, cpca):
     return df_x, df_y, df_test_x
 
 def to_csv(var, gpca, cpca):
-    df_x = pd.read_csv('gfeature_augm.csv')
+    df_x = pd.read_csv('ng_feature_augm.csv')
     df_y = pd.read_csv('../data/train_targets_scored.csv')
-    df_test_x = pd.read_csv('test_gfeature_augm.csv')
+    df_test_x = pd.read_csv('tg_feature_augm.csv')
 
     df_x, df_y, df_test_x = get_eng_df(df_x, df_y, df_test_x, var, gpca, cpca)
 
     print("Writing csv for " + str(var) +", " + str(gpca) + ", " + str(cpca))
     print("Shape: " + str(df_x.shape))
-    df_x.to_csv('./real_gauss_pca/v'+str(var)+'g'+str(gpca)+'c'+str(cpca)+'.csv', index=False)
+    df_x.to_csv('./all_gauss_pca/v'+str(var)+'g'+str(gpca)+'c'+str(cpca)+'.csv', index=False)
     # df_y.to_csv('feature_eng_y.csv', index=False)
 
 vars = [.8]
-gpcas = [300]
-cpcas = [40]
+gpcas = [450]
+cpcas = [55]
 
 for var in vars:
     for gpca in gpcas:

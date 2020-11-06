@@ -37,22 +37,24 @@ def robust_scale(df_x):
     df_x = pd.DataFrame(data, columns=df_x.columns)
     return df_x
 
-def get_aug_df(df_x):
-    df_x = cp_time(df_x)
-    df_x = cp_dose(df_x)
-    df_x = gene_exp(df_x)
-    df_x = cell_via(df_x)
-    df_x = gauss_trans(df_x)
+def get_aug_df(df_x, df_test_x):
+    df_merged = df_x.append(df_test_x, ignore_index=True)
+    df_merged = cp_time(df_merged)
+    df_merged = cp_dose(df_merged)
+    df_merged = gauss_trans(df_merged)
+    df_x = df_merged.iloc[:len(df_x.index),:]
+    df_test_x = df_merged.iloc[len(df_x.index):,:]
+    return df_x, df_test_x
 
-    return df_x
+def to_csv(df_x, df_test_x):
+    df_merged = df_x.append(df_test_x, ignore_index=True)
+    df_merged = cp_time(df_merged)
+    df_merged = cp_dose(df_merged)
+    df_merged = gauss_trans(df_merged)
+    df_x = df_merged.iloc[:len(df_x.index),:]
+    df_test_x = df_merged.iloc[len(df_x.index):,:]
 
-def to_csv(df_x):
-    df_x = cp_time(df_x)
-    df_x = cp_dose(df_x)
-    df_x = gene_exp(df_x)
-    df_x = cell_via(df_x)
-    df_x = gauss_trans(df_x)
+    df_x.to_csv('ng_feature_augm.csv', index=False)
+    df_test_x.to_csv('tg_feature_augm.csv', index=False)
 
-    df_x.to_csv('gfeature_augm.csv', index=False)
-
-to_csv(pd.read_csv('../data/train_features.csv'))
+to_csv(pd.read_csv('../data/train_features.csv'), pd.read_csv('../data/test_features.csv'))

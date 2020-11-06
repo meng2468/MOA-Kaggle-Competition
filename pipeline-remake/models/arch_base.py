@@ -7,21 +7,24 @@ from tensorflow.keras import regularizers
 import tensorflow_addons as tfa
 from sklearn import metrics
 
+
 class Model:
     def __init__(self, features, targets, params):
         self.dropout = params['dropout']
         self.learning_rate = params['learning_rate']
         self.batch_size = params['batch_size']
         self.label_smoothing = params['label_smoothing']
-
+        self.layers = params['layers']
+        self.neurons = params['neurons']
         
         inputs = keras.Input(shape=(features))
         x = layers.BatchNormalization()(inputs)
-        x = tfa.layers.WeightNormalization(layers.Dense(1024, activation="relu"))(x)
+        x = tfa.layers.WeightNormalization(layers.Dense(self.neurons, activation="relu"))(x)
 
-        x = layers.BatchNormalization()(x)
-        x = layers.AlphaDropout(self.dropout)(x)
-        x = tfa.layers.WeightNormalization(layers.Dense(1024, activation="relu"))(x)
+        for _ in range(self.layers):
+            x = layers.BatchNormalization()(x)
+            x = layers.AlphaDropout(self.dropout)(x)
+            x = tfa.layers.WeightNormalization(layers.Dense(self.neurons, activation="relu"))(x)
 
         x = layers.BatchNormalization()(x)
         x = layers.AlphaDropout(self.dropout)(x)
@@ -38,7 +41,7 @@ class Model:
                 optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate),
             )
 
-        early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
+        early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3, min_delta=1E-5, restore_best_weights=True, baseline=None)
         
         reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, mode='min', min_lr=1E-5)
             

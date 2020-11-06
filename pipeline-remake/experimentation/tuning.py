@@ -9,6 +9,7 @@ import optuna
 import sys
 sys.path.insert(1, '../models')
 from arch_base import Model
+import os
 
 def tuning_objective(trial):
     params = {} 
@@ -17,20 +18,24 @@ def tuning_objective(trial):
     params['target_csv'] = '../processing/feature_eng_y.csv'
 
     # Select hyperparameters
-    # params['dropout'] = 0
-    params['learning_rate'] = 0.0013864656415113995
+    params['dropout'] = 0
+    params['learning_rate'] = 0.001386656415113995
     params['batch_size'] = 200
-    # params['label_smoothing'] = 0
+    params['label_smoothing'] = 0
+    # params['layers'] = 1
+    # params['neurons'] = 0
     
     # Select tuning
-    # params['batch_size'] = trial.suggest_int('batch_size', 200, 1200, 100)
-    # params['learning_rate'] = trial.suggest_loguniform('lr', 1e-4, 1e-2)
-    params['dropout'] = trial.suggest_float('dropout', 0, .4)
-    params['label_smoothing'] = trial.suggest_loguniform('label_smoothing', 1e-6,1e-2)
+    params['batch_size'] = trial.suggest_int('batch_size', 100, 1500, 100)
+    params['learning_rate'] = trial.suggest_loguniform('lr', 1e-4, 1e-2)
+    # params['dropout'] = trial.suggest_float('dropout', 0, .4)
+    # params['label_smoothing'] = trial.suggest_loguniform('label_smoothing', 1e-6,1e-2)
+    params['layers'] = trial.suggest_int('layers', 1,5)
+    params['neurons'] = trial.suggest_int('neurons', 512,2048, 128)
 
     df_x = pd.read_csv(params['feature_csv'])
     df_y = pd.read_csv(params['target_csv'])
-    datasets = get_strat_folds(df_x, df_y, 5)
+    datasets = get_strat_folds(df_x, df_y, 5, 1)
     losses = []
     aucs = []
     i = 0
@@ -58,6 +63,6 @@ def param_tuning():
     study.optimize(tuning_objective, n_trials=150)
     print(study.best_params)
     df_study = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))
-    df_study.to_csv('trial.csv', index=False)
+    df_study.to_csv('layer_neuron.csv', index=False)
 
 param_tuning()
