@@ -84,12 +84,12 @@ params = {}
 params['target_csv'] = '../processing/feature_eng_y.csv'
 
 # Select hyperparameters
-params['dropout'] = 0.200000
-params['learning_rate'] = 0.003809
-params['batch_size'] = 1200
-params['label_smoothing'] = 0
+params['dropout'] = 0.15
+params['learning_rate'] = 0.0008368164376992361
+params['batch_size'] = 128
+params['label_smoothing'] = 0.0000067
 params['layers'] = 1
-params['neurons'] = 1024
+params['neurons'] = 1600
 
 #Info for logging
 params['extra_inf'] = ''
@@ -98,10 +98,10 @@ def evaluate(vars, gpcas, cpcas):
     for var in vars:
         for gpca in gpcas:
             for cpca in cpcas:
-                path = '../processing/real_gauss_pca/v'+str(var)+'g'+str(gpca)+'c'+str(cpca)+'.csv'
+                path = '../processing/all_gauss_pca/v'+str(var)+'g'+str(gpca)+'c'+str(cpca)+'.csv'
                 params['feature_csv'] = path
                 
                 full_test(params)
 
-evaluate([.8], [450], [55])
+evaluate([.9], [300], [40])
 

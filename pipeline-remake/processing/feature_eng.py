@@ -111,9 +111,9 @@ def to_csv(var, gpca, cpca):
     df_x.to_csv('./all_gauss_pca/v'+str(var)+'g'+str(gpca)+'c'+str(cpca)+'.csv', index=False)
     # df_y.to_csv('feature_eng_y.csv', index=False)
 
-vars = [.8]
-gpcas = [450]
-cpcas = [55]
+vars = [.9]
+gpcas = [300]
+cpcas = [40]
 
 for var in vars:
     for gpca in gpcas:

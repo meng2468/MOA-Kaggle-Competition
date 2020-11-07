@@ -14,7 +14,7 @@ import os
 def tuning_objective(trial):
     params = {} 
     # Select data
-    params['feature_csv'] = '../processing/real_gauss_pca/v0.8g450c55.csv'
+    params['feature_csv'] = '../processing/all_gauss_pca/v0.85g450c55.csv'
     params['target_csv'] = '../processing/feature_eng_y.csv'
 
     # Select hyperparameters
@@ -22,16 +22,16 @@ def tuning_objective(trial):
     params['learning_rate'] = 0.001386656415113995
     params['batch_size'] = 200
     params['label_smoothing'] = 0
-    # params['layers'] = 1
-    # params['neurons'] = 0
+    params['layers'] = 1
+    params['neurons'] = 1600
     
     # Select tuning
     params['batch_size'] = trial.suggest_int('batch_size', 100, 1500, 100)
     params['learning_rate'] = trial.suggest_loguniform('lr', 1e-4, 1e-2)
-    # params['dropout'] = trial.suggest_float('dropout', 0, .4)
-    # params['label_smoothing'] = trial.suggest_loguniform('label_smoothing', 1e-6,1e-2)
-    params['layers'] = trial.suggest_int('layers', 1,5)
-    params['neurons'] = trial.suggest_int('neurons', 512,2048, 128)
+    params['dropout'] = trial.suggest_float('dropout', .15, .3)
+    params['label_smoothing'] = trial.suggest_loguniform('label_smoothing', 1e-6,1e-2)
+    # params['layers'] = trial.suggest_int('layers', 1,5)
+    # params['neurons'] = trial.suggest_int('neurons', 512,2048, 128)
 
     df_x = pd.read_csv(params['feature_csv'])
     df_y = pd.read_csv(params['target_csv'])
@@ -60,9 +60,9 @@ def tuning_objective(trial):
 
 def param_tuning():
     study = optuna.create_study(pruner=optuna.pruners.MedianPruner())
-    study.optimize(tuning_objective, n_trials=150)
+    study.optimize(tuning_objective, n_trials=300)
     print(study.best_params)
     df_study = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))
-    df_study.to_csv('layer_neuron.csv', index=False)
+    df_study.to_csv('overnight8545055.csv', index=False)
 
 param_tuning()

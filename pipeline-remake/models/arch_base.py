@@ -17,20 +17,67 @@ class Model:
         self.layers = params['layers']
         self.neurons = params['neurons']
         
-        inputs = keras.Input(shape=(features))
-        x = layers.BatchNormalization()(inputs)
-        x = tfa.layers.WeightNormalization(layers.Dense(self.neurons, activation="relu"))(x)
-
-        for _ in range(self.layers):
-            x = layers.BatchNormalization()(x)
-            x = layers.AlphaDropout(self.dropout)(x)
+        def base():
+            inputs = keras.Input(shape=(features))
+            x = layers.BatchNormalization()(inputs)
             x = tfa.layers.WeightNormalization(layers.Dense(self.neurons, activation="relu"))(x)
 
-        x = layers.BatchNormalization()(x)
-        x = layers.AlphaDropout(self.dropout)(x)
-        outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation="sigmoid"))(x)
+            for _ in range(self.layers):
+                x = layers.BatchNormalization()(x)
+                x = layers.AlphaDropout(self.dropout)(x)
+                x = tfa.layers.WeightNormalization(layers.Dense(self.neurons, activation="relu"))(x)
 
-        self.model = keras.Model(inputs=inputs, outputs=outputs, name="base")
+            x = layers.BatchNormalization()(x)
+            x = layers.AlphaDropout(self.dropout)(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation="sigmoid"))(x)
+            model = keras.Model(inputs=inputs, outputs=outputs, name="base")
+            return model
+
+        def starter_01901():
+            inputs = keras.Input(shape=(features))
+            x = layers.BatchNormalization()(inputs)
+            x = layers.Dropout(0.2)(x)
+            x = tfa.layers.WeightNormalization(layers.Dense(2048, activation="relu"))(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.5)(x)
+            x = tfa.layers.WeightNormalization(layers.Dense(2048, activation="relu"))(x)
+            x = layers.BatchNormalization()(x)
+            x = tf.keras.layers.Dropout(0.5)(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets, activation="sigmoid"))(x)
+            model = keras.Model(inputs=inputs, outputs=outputs, name="starter_01901")
+            return model
+
+        def tl_01874():
+            inputs = keras.Input(shape=(features))
+            x = layers.BatchNormalization()(inputs)
+            x = layers.Dropout(0.3)(x)
+            x = tfa.layers.WeightNormalization(layers.Dense(480,kernel_initializer="he_normal"))(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Activation(tf.nn.leaky_relu)(x)
+            x = layers.Dropout(0.4)(x)
+            x = tfa.layers.WeightNormalization(layers.Dense(256,kernel_initializer="he_normal"))(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Activation(tf.nn.leaky_relu)(x)
+            x = layers.Dropout(0.2)(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation="sigmoid",kernel_initializer="he_normal"))
+            model = keras.Model(inputs=inputs, outputs=outputs, name="tl_01874")
+            return model
+
+        def tolg_018():
+            inputs = tf.keras.Input(shape=(features))
+            x = layers.BatchNormalization()(inputs)
+            x = tfa.layers.WeightNormalization(layers.Dense(800, activation='swish'))(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.4)(x)
+            x = tfa.layers.WeightNormalization(layers.Dense(400, activation='swish'))(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.4)(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(N_TARGETS,activation='sigmoid',bias_initializer=None))(x)
+            model = keras.Model(inputs=inputs, outputs=outputs, name="tolg_018")
+            return model
+
+        self.model = tl_01874()
+
     
     def run_training(self, df_train_x, df_train_y, df_test_x, df_test_y):
         def ls(y_true,y_pred):
