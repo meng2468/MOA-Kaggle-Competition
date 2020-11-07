@@ -82,14 +82,15 @@ params = {}
 #Select data
 # params['feature_csv'] = '../processing/gauss_pca2/v1.8g100c40.csv'
 params['target_csv'] = '../processing/feature_eng_y.csv'
+params['network'] = 'tolg_018'
 
 # Select hyperparameters
-params['dropout'] = 0.15
-params['learning_rate'] = 0.0008368164376992361
-params['batch_size'] = 128
-params['label_smoothing'] = 0.0000067
-params['layers'] = 1
-params['neurons'] = 1600
+params['dropout'] = -1
+params['learning_rate'] = 0.0009904
+params['batch_size'] = 100
+params['label_smoothing'] = 0.001
+params['layers'] = -1
+params['neurons'] = -1
 
 #Info for logging
 params['extra_inf'] = ''

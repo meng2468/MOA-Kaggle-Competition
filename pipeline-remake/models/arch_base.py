@@ -16,6 +16,7 @@ class Model:
         self.label_smoothing = params['label_smoothing']
         self.layers = params['layers']
         self.neurons = params['neurons']
+        self.network = params['network']
         
         def base():
             inputs = keras.Input(shape=(features))
@@ -59,7 +60,7 @@ class Model:
             x = layers.BatchNormalization()(x)
             x = layers.Activation(tf.nn.leaky_relu)(x)
             x = layers.Dropout(0.2)(x)
-            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation="sigmoid",kernel_initializer="he_normal"))
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation="sigmoid",kernel_initializer="he_normal"))(x)
             model = keras.Model(inputs=inputs, outputs=outputs, name="tl_01874")
             return model
 
@@ -72,11 +73,16 @@ class Model:
             x = tfa.layers.WeightNormalization(layers.Dense(400, activation='swish'))(x)
             x = layers.BatchNormalization()(x)
             x = layers.Dropout(0.4)(x)
-            outputs = tfa.layers.WeightNormalization(layers.Dense(N_TARGETS,activation='sigmoid',bias_initializer=None))(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=None))(x)
             model = keras.Model(inputs=inputs, outputs=outputs, name="tolg_018")
             return model
 
-        self.model = tl_01874()
+        if self.network == 'base':
+            self.model = base()
+        if self.network == 'tl_01874':
+            self.model = tl_01874()
+        if self.network == 'tolg_018':
+            self.model = tolg_018()
 
     
     def run_training(self, df_train_x, df_train_y, df_test_x, df_test_y):
@@ -85,7 +91,7 @@ class Model:
 
         self.model.compile(
                 loss=ls,
-                optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate),
+                optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate)
             )
 
         early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3, min_delta=1E-5, restore_best_weights=True, baseline=None)

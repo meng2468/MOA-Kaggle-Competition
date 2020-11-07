@@ -19,17 +19,18 @@ def tuning_objective(trial):
 
     # Select hyperparameters
     params['dropout'] = 0
-    params['learning_rate'] = 0.001386656415113995
-    params['batch_size'] = 200
+    params['learning_rate'] = 0.0009086819916478352
+    params['batch_size'] = 100
     params['label_smoothing'] = 0
     params['layers'] = 1
     params['neurons'] = 1600
+    params['network'] = 'tl_01874'
     
     # Select tuning
-    params['batch_size'] = trial.suggest_int('batch_size', 100, 1500, 100)
-    params['learning_rate'] = trial.suggest_loguniform('lr', 1e-4, 1e-2)
-    params['dropout'] = trial.suggest_float('dropout', .15, .3)
-    params['label_smoothing'] = trial.suggest_loguniform('label_smoothing', 1e-6,1e-2)
+    # params['batch_size'] = trial.suggest_int('batch_size', 100, 1500, 100)
+    params['learning_rate'] = trial.suggest_loguniform('lr', 1e-4, 1e-3)
+    # params['dropout'] = trial.suggest_float('dropout', .15, .3)
+    # params['label_smoothing'] = trial.suggest_loguniform('label_smoothing', 1e-6,1e-2)
     # params['layers'] = trial.suggest_int('layers', 1,5)
     # params['neurons'] = trial.suggest_int('neurons', 512,2048, 128)
 
@@ -60,7 +61,7 @@ def tuning_objective(trial):
 
 def param_tuning():
     study = optuna.create_study(pruner=optuna.pruners.MedianPruner())
-    study.optimize(tuning_objective, n_trials=300)
+    study.optimize(tuning_objective, n_trials=30)
     print(study.best_params)
     df_study = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))
     df_study.to_csv('overnight8545055.csv', index=False)
