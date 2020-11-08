@@ -101,12 +101,12 @@ class Model:
             x = layers.LeakyReLU()(x)
 
             x = layers.BatchNormalization()(x)
-            x = layers.Dropout(0.5)(x)
+            x = layers.Dropout(self.dropout)(x)
             x = tfa.layers.WeightNormalization(layers.Dense(1500, kernel_initializer="he_normal"))(x)
             x = layers.LeakyReLU()(x)
 
             x = layers.BatchNormalization()(x)
-            x = layers.Dropout(0.5)(x)
+            x = layers.Dropout(self.dropout)(x)
             outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=bias))(x)
             model = keras.Model(inputs=inputs, outputs=outputs, name="fat_lrelu")
             return model
