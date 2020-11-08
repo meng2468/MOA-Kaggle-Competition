@@ -9,7 +9,11 @@ from sklearn import metrics
 
 
 class Model:
-    def __init__(self, features, targets, params):
+    def __init__(self, df_x, df_y, params):
+        features = len(df_x.columns)
+        targets = len(df_y.columns)
+        bias = keras.initializers.Constant(df_y.mean().values)
+
         self.dropout = params['dropout']
         self.learning_rate = params['learning_rate']
         self.batch_size = params['batch_size']
@@ -86,7 +90,7 @@ class Model:
             x = tfa.layers.WeightNormalization(layers.Dense(400, activation='swish', kernel_initializer="he_normal"))(x)
             x = layers.BatchNormalization()(x)
             x = layers.Dropout(0.4)(x)
-            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=None))(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=bias))(x)
             model = keras.Model(inputs=inputs, outputs=outputs, name="tolg_018")
             return model
         

@@ -24,7 +24,7 @@ def quick_test(params):
         train_x, train_y = fold['train']
         test_x, test_y = fold['test']
         
-        myModel = Model(len(df_x.columns), len(df_y.columns), params)
+        myModel = Model(df_x, df_y, params)
         myModel.run_training(train_x, train_y, test_x, test_y)
         
         loss, auc = myModel.get_eval(test_x, test_y)
@@ -52,7 +52,7 @@ def full_test(params):
             train_x, train_y = fold['train']
             test_x, test_y = fold['test']
             
-            myModel = Model(len(df_x.columns), len(df_y.columns), params, df_y.mean().values)
+            myModel = Model(df_x, df_y, params)
             myModel.run_training(train_x, train_y, test_x, test_y)
             
             loss, auc = myModel.get_eval(test_x, test_y)
@@ -94,7 +94,7 @@ params['layers'] = -1
 params['neurons'] = -1
 
 #Info for logging
-params['extra_inf'] = ''
+params['extra_inf'] = 'added output bias'
 
 def evaluate(vars, gpcas, cpcas):
     for var in vars:
