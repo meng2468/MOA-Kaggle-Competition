@@ -94,7 +94,7 @@ class Model:
             model = keras.Model(inputs=inputs, outputs=outputs, name="tolg_018")
             return model
         
-        def olg_0184():
+        def fat_lrelu():
             inputs = tf.keras.Input(shape=(features))
             x = layers.BatchNormalization()(inputs)
             x = tfa.layers.WeightNormalization(layers.Dense(1500, kernel_initializer="he_normal"))(x)
@@ -107,8 +107,8 @@ class Model:
 
             x = layers.BatchNormalization()(x)
             x = layers.Dropout(0.5)(x)
-            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=None))(x)
-            model = keras.Model(inputs=inputs, outputs=outputs, name="olg_0184")
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=bias))(x)
+            model = keras.Model(inputs=inputs, outputs=outputs, name="fat_lrelu")
             return model
 
         if self.network == 'base':
@@ -119,8 +119,8 @@ class Model:
             self.model = tolg_018()
         if self.network == 'tolg_018_kerninit':
             self.model = tolg_018_kerninit()
-        if self.network == 'olg_0184':
-            self.model = olg_0184()
+        if self.network == 'fat_lrelu':
+            self.model = fat_lrelu()
 
     
     def run_training(self, df_train_x, df_train_y, df_test_x, df_test_y):

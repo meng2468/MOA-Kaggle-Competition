@@ -89,12 +89,12 @@ params['network'] = 'tolg_018_kerninit'
 params['dropout'] = -1
 params['learning_rate'] = 0.0009904
 params['batch_size'] = 100
-params['label_smoothing'] = 0
+params['label_smoothing'] = 0.002
 params['layers'] = -1
 params['neurons'] = -1
 
 #Info for logging
-params['extra_inf'] = 'added output bias'
+params['extra_inf'] = ''
 
 def evaluate(vars, gpcas, cpcas):
     for var in vars:
@@ -106,3 +106,5 @@ def evaluate(vars, gpcas, cpcas):
                 full_test(params)
 
 evaluate([.9], [300], [40])
+
+
