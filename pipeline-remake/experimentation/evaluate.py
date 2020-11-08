@@ -52,7 +52,7 @@ def full_test(params):
             train_x, train_y = fold['train']
             test_x, test_y = fold['test']
             
-            myModel = Model(len(df_x.columns), len(df_y.columns), params)
+            myModel = Model(len(df_x.columns), len(df_y.columns), params, df_y.mean().values)
             myModel.run_training(train_x, train_y, test_x, test_y)
             
             loss, auc = myModel.get_eval(test_x, test_y)
@@ -76,19 +76,20 @@ def log_evaluation(params, loss, auc):
     params['loss'] = loss
     params['auc'] = auc
     df = df.append(params, ignore_index=True)
+    df = df.sort_values(by='loss')
     df.to_csv('../logs/experiment_results.csv', index=False)
 
 params = {}
 #Select data
 # params['feature_csv'] = '../processing/gauss_pca2/v1.8g100c40.csv'
 params['target_csv'] = '../processing/feature_eng_y.csv'
-params['network'] = 'tolg_018'
+params['network'] = 'tolg_018_kerninit'
 
 # Select hyperparameters
 params['dropout'] = -1
 params['learning_rate'] = 0.0009904
 params['batch_size'] = 100
-params['label_smoothing'] = 0.001
+params['label_smoothing'] = 0
 params['layers'] = -1
 params['neurons'] = -1
 
@@ -105,4 +106,3 @@ def evaluate(vars, gpcas, cpcas):
                 full_test(params)
 
 evaluate([.9], [300], [40])
-

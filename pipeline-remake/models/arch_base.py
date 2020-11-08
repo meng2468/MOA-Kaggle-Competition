@@ -17,7 +17,7 @@ class Model:
         self.layers = params['layers']
         self.neurons = params['neurons']
         self.network = params['network']
-        
+
         def base():
             inputs = keras.Input(shape=(features))
             x = layers.BatchNormalization()(inputs)
@@ -77,12 +77,46 @@ class Model:
             model = keras.Model(inputs=inputs, outputs=outputs, name="tolg_018")
             return model
 
+        def tolg_018_kerninit():
+            inputs = tf.keras.Input(shape=(features))
+            x = layers.BatchNormalization()(inputs)
+            x = tfa.layers.WeightNormalization(layers.Dense(800, activation='swish', kernel_initializer="he_normal"))(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.4)(x)
+            x = tfa.layers.WeightNormalization(layers.Dense(400, activation='swish', kernel_initializer="he_normal"))(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.4)(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=None))(x)
+            model = keras.Model(inputs=inputs, outputs=outputs, name="tolg_018")
+            return model
+        
+        def olg_0184():
+            inputs = tf.keras.Input(shape=(features))
+            x = layers.BatchNormalization()(inputs)
+            x = tfa.layers.WeightNormalization(layers.Dense(1500, kernel_initializer="he_normal"))(x)
+            x = layers.LeakyReLU()(x)
+
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.5)(x)
+            x = tfa.layers.WeightNormalization(layers.Dense(1500, kernel_initializer="he_normal"))(x)
+            x = layers.LeakyReLU()(x)
+
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.5)(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=None))(x)
+            model = keras.Model(inputs=inputs, outputs=outputs, name="olg_0184")
+            return model
+
         if self.network == 'base':
             self.model = base()
         if self.network == 'tl_01874':
             self.model = tl_01874()
         if self.network == 'tolg_018':
             self.model = tolg_018()
+        if self.network == 'tolg_018_kerninit':
+            self.model = tolg_018_kerninit()
+        if self.network == 'olg_0184':
+            self.model = olg_0184()
 
     
     def run_training(self, df_train_x, df_train_y, df_test_x, df_test_y):
