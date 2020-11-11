@@ -160,7 +160,7 @@ class Model(nn.Module):
         if self.activation_type == "LEAKY":
             x2 = F.leaky_relu(self.dense2(x2))
         elif self.activation_type == "SWISH":
-            x2 = nn.Hardswish(self.dense2(x2))
+            x2 = F.hardswish(self.dense2(x2))
         else:
             x2 = F.relu(self.dense2(x2))
 
@@ -207,7 +207,7 @@ class Model_Res(nn.Module):
         if self.activation_type == "LEAKY":
             x2 = F.leaky_relu(self.dense2(x2))
         elif self.activation_type == "SWISH":
-            x2 = nn.Hardswish(self.dense2(x2))
+            x2 = F.hardswish(self.dense2(x2))
         else:
             x2 = F.relu(self.dense2(x2))
 
