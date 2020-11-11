@@ -200,7 +200,7 @@ class Model_Res(nn.Module):
     def forward(self, x):
         x1 = self.batch_norm1(x)
 #         x1 = self.dropout1(x1)
-              if self.activation_type == "LEAKY":
+        if self.activation_type == "LEAKY":
             x1 = F.leaky_relu(self.dense1(x1))
         elif self.activation_type == "SWISH":
             x1 = F.Hardswish(self.dense1(x1))
