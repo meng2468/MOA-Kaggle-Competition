@@ -151,7 +151,7 @@ class Model(nn.Module):
         if self.activation_type == "LEAKY":
             x1 = F.leaky_relu(self.dense1(x1))
         elif self.activation_type == "SWISH":
-            x1 = F.Hardswish(self.dense1(x1))
+            x1 = nn.Hardswish(self.dense1(x1))
         else:
             x1 = F.relu(self.dense1(x1))
 
@@ -160,18 +160,13 @@ class Model(nn.Module):
         if self.activation_type == "LEAKY":
             x2 = F.leaky_relu(self.dense2(x2))
         elif self.activation_type == "SWISH":
-            x2 = F.Hardswish(self.dense2(x2))
+            x2 = nn.Hardswish(self.dense2(x2))
         else:
             x2 = F.relu(self.dense2(x2))
 
         x3 = self.batch_norm3(x2)
         x3 = self.dropout3(x3)
         x3 = self.dense3(x3)
-
-        print(x1.shape)
-        print(x2.shape)
-        print(x3.shape)
-
 
         return x3
 
@@ -203,7 +198,7 @@ class Model_Res(nn.Module):
         if self.activation_type == "LEAKY":
             x1 = F.leaky_relu(self.dense1(x1))
         elif self.activation_type == "SWISH":
-            x1 = F.Hardswish(self.dense1(x1))
+            x1 = nn.Hardswish(self.dense1(x1))
         else:
             x1 = F.relu(self.dense1(x1))
 
@@ -212,7 +207,7 @@ class Model_Res(nn.Module):
         if self.activation_type == "LEAKY":
             x2 = F.leaky_relu(self.dense2(x2))
         elif self.activation_type == "SWISH":
-            x2 = F.Hardswish(self.dense2(x2))
+            x2 = nn.Hardswish(self.dense2(x2))
         else:
             x2 = F.relu(self.dense2(x2))
 
