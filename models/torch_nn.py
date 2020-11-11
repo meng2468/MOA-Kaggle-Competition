@@ -36,7 +36,7 @@ DEFAULT_PARAM = {
     "HIDDENT_SIZE" : 1024,
     "LOSS_SMOOTHING": 0.001, # remove if not apply loss smoothing
     "DROPOUT" : 0.25,
-    "RELU_TYPE": "LEAKY", # "BASIC" | "LEAKY"
+    "ACTIVATION_TYPE": "LEAKY", # "BASIC" | "LEAKY" ｜ "SWISH"
 }
 
 def seed_everything(seed=42):
@@ -129,9 +129,9 @@ def torch_inference(model, dataloader, device):
     return preds
 
 class Model(nn.Module):
-    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
+    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, activation_type="BASIC"):
         super(Model, self).__init__()
-        self.relu_type = relu_type
+        self.activation_type = activation_type
 
         self.batch_norm1 = nn.BatchNorm1d(num_features)
 #         self.dropout1 = nn.Dropout(0.2)
@@ -148,15 +148,19 @@ class Model(nn.Module):
     def forward(self, x):
         x1 = self.batch_norm1(x)
 #         x1 = self.dropout1(x1)
-        if self.relu_type == "LEAKY":
+        if self.activation_type == "LEAKY":
             x1 = F.leaky_relu(self.dense1(x1))
+        elif self.activation_type == "SWISH":
+            x1 = F.Hardswish(self.dense1(x1))
         else:
             x1 = F.relu(self.dense1(x1))
 
         x2 = self.batch_norm2(x1)
         x2 = self.dropout2(x2)
-        if self.relu_type == "LEAKY":
+        if self.activation_type == "LEAKY":
             x2 = F.leaky_relu(self.dense2(x2))
+        elif self.activation_type == "SWISH":
+            x2 = F.Hardswish(self.dense2(x2))
         else:
             x2 = F.relu(self.dense2(x2))
 
@@ -172,10 +176,10 @@ class Model(nn.Module):
         return x3
 
 class Model_Res(nn.Module):
-    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
+    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, activation_type="BASIC"):
         super(Model_Res, self).__init__()
 
-        self.relu_type = relu_type
+        self.activation_type = activation_type
 
         self.batch_norm1 = nn.BatchNorm1d(num_features)
 #         self.dropout1 = nn.Dropout(0.2)
@@ -196,15 +200,19 @@ class Model_Res(nn.Module):
     def forward(self, x):
         x1 = self.batch_norm1(x)
 #         x1 = self.dropout1(x1)
-        if self.relu_type == "LEAKY":
+              if self.activation_type == "LEAKY":
             x1 = F.leaky_relu(self.dense1(x1))
+        elif self.activation_type == "SWISH":
+            x1 = F.Hardswish(self.dense1(x1))
         else:
             x1 = F.relu(self.dense1(x1))
 
         x2 = self.batch_norm2(x1)
         x2 = self.dropout2(x2)
-        if self.relu_type == "LEAKY":
+        if self.activation_type == "LEAKY":
             x2 = F.leaky_relu(self.dense2(x2))
+        elif self.activation_type == "SWISH":
+            x2 = F.Hardswish(self.dense2(x2))
         else:
             x2 = F.relu(self.dense2(x2))
 
@@ -212,11 +220,12 @@ class Model_Res(nn.Module):
         x3 = self.dropout3(x3)
         x3 = self.dense3(x3)
 
-        stack = torch.stack([x1,x2,x3], dim=2)
-#         y = self.conv(stack)
-        y = self.pool(stack)
-        y = y.squeeze(-1)
+#         stack = torch.stack([x1,x2,x3], dim=2)
+# #         y = self.conv(stack)
+#         y = self.pool(stack)
+#         y = y.squeeze(-1)
 
+        y = torch.add(x1, x3)
 
         y = self.dense4(y)
 
@@ -254,7 +263,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
             num_targets=PARAM["NUM_TARAGET"],
             hidden_size=PARAM["HIDDENT_SIZE"],
             dropout=PARAM.get("DROPOUT", 0.5),
-            relu_type=PARAM.get("RELU_TYPE", "BASIC"),
+            activation_type=PARAM.get("ACTIVATION_TYPE", "BASIC"),
         )
     else:
         model = Model(
@@ -262,7 +271,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
             num_targets=PARAM["NUM_TARAGET"],
             hidden_size=PARAM["HIDDENT_SIZE"],
             dropout=PARAM.get("DROPOUT", 0.5),
-            relu_type=PARAM.get("RELU_TYPE", "BASIC"),
+            activation_type=PARAM.get("ACTIVATION_TYPE", "BASIC"),
         )
     model.to(PARAM["DEVICE"])
 
@@ -338,14 +347,14 @@ def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
             num_features=PARAM["NUM_FEATURE"],
             num_targets=PARAM["NUM_TARAGET"],
             hidden_size=PARAM["HIDDENT_SIZE"],
-            relu_type=PARAM.get("RELU_TYPE", "BASIC"),
+            activation_type=PARAM.get("ACTIVATION_TYPE", "BASIC"),
         )
     else:
         model = Model(
             num_features=PARAM["NUM_FEATURE"],
             num_targets=PARAM["NUM_TARAGET"],
             hidden_size=PARAM["HIDDENT_SIZE"],
-            relu_type=PARAM.get("RELU_TYPE", "BASIC"),
+            activation_type=PARAM.get("ACTIVATION_TYPE", "BASIC"),
         )
     model.load_state_dict(torch.load(saved_model))
     model.to(PARAM["DEVICE"])
