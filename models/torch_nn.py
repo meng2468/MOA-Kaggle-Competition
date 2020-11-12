@@ -21,6 +21,7 @@ DEFAULT_PARAM = {
     "DEVICE" :  ('cuda' if torch.cuda.is_available() else 'cpu'),
     "EPOCHS" :  2,  #30
     "LEARNING_RATE" :  1e-3,
+    "MAX_LR": 1e-2, ## for 1 cycle learning
     "WEIGHT_DECAY" :  1e-5,
     "EARLY_STOPPING_STEPS" :  10,
     "EARLY_STOP" :  False,
@@ -275,7 +276,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
                                  weight_decay=PARAM["WEIGHT_DECAY"])
 
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e3,
-                                              max_lr=1e-2, epochs=PARAM["EPOCHS"], steps_per_epoch=len(trainloader))
+                                              max_lr=PARAM["MAX_LR"], epochs=PARAM["EPOCHS"], steps_per_epoch=len(trainloader))
 
 
     loss_fn = nn.BCEWithLogitsLoss()
