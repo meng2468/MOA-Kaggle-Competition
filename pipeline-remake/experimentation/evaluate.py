@@ -4,10 +4,11 @@ np.random.seed(1001)
 import tensorflow as tf
 tf.random.set_seed(221)
 from crossvalidation import *
-import keras
 import optuna
 import sys
 sys.path.insert(1, '../models')
+import keras
+
 
 from arch_base import Model
 
@@ -77,17 +78,17 @@ def log_evaluation(params, loss, auc):
     params['auc'] = auc
     df = df.append(params, ignore_index=True)
     df = df.sort_values(by='loss')
-    df.to_csv('../logs/experiment_results.csv', index=False)
+    df.to_csv('../logs/experiment_resultsv2.csv', index=False)
 
 params = {}
 #Select data
 # params['feature_csv'] = '../processing/gauss_pca2/v1.8g100c40.csv'
 params['target_csv'] = '../processing/feature_eng_y.csv'
-params['network'] = 'fat_lrelu'
+params['network'] = 'tolg_018_kerninit'
 
 # Select hyperparameters
 params['dropout'] = .7
-params['learning_rate'] = 0.004724511421205628
+params['learning_rate'] = 0.00472
 params['batch_size'] = 100
 params['label_smoothing'] = 0
 params['layers'] = -1
@@ -105,9 +106,24 @@ def evaluate(vars, gpcas, cpcas):
                 
                 full_test(params)
 
+params['network'] = 'fat_lrelu'
+params['label_smoothing'] = 0.000
 evaluate([.9], [300], [40])
 params['label_smoothing'] = 0.001
 evaluate([.9], [300], [40])
 params['label_smoothing'] = 0.002
+evaluate([.9], [300], [40])
+params['label_smoothing'] = 0.003
+evaluate([.9], [300], [40])
+
+params['network'] = 'tolg_018_kerninit'
+params['learning_rate'] = 0.0009904
+params['label_smoothing'] = 0.000
+evaluate([.9], [300], [40])
+params['label_smoothing'] = 0.001
+evaluate([.9], [300], [40])
+params['label_smoothing'] = 0.002
+evaluate([.9], [300], [40])
+params['label_smoothing'] = 0.003
 evaluate([.9], [300], [40])
 

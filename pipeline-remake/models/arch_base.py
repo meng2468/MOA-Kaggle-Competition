@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
-import tensorflow as tf
+from sklearn import metrics
 from tensorflow import keras
+import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 import tensorflow_addons as tfa
-from sklearn import metrics
 
 
 class Model:
@@ -90,7 +90,7 @@ class Model:
             x = tfa.layers.WeightNormalization(layers.Dense(400, activation='swish', kernel_initializer="he_normal"))(x)
             x = layers.BatchNormalization()(x)
             x = layers.Dropout(0.4)(x)
-            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=bias))(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',kernel_initializer="he_normal", bias_initializer=bias))(x)
             model = keras.Model(inputs=inputs, outputs=outputs, name="tolg_018")
             return model
         
@@ -107,7 +107,7 @@ class Model:
 
             x = layers.BatchNormalization()(x)
             x = layers.Dropout(self.dropout)(x)
-            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',bias_initializer=bias))(x)
+            outputs = tfa.layers.WeightNormalization(layers.Dense(targets,activation='sigmoid',kernel_initializer="he_normal", bias_initializer=bias))(x)
             model = keras.Model(inputs=inputs, outputs=outputs, name="fat_lrelu")
             return model
 
@@ -129,12 +129,13 @@ class Model:
 
         self.model.compile(
                 loss=ls,
-                optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate)
+                optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate),
+                metrics = [keras.losses.BinaryCrossentropy()]
             )
 
-        early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3, min_delta=1E-5, restore_best_weights=True, baseline=None)
+        early_stop = keras.callbacks.EarlyStopping(monitor='val_binary_crossentropy', patience=3, min_delta=1E-5, restore_best_weights=True, baseline=None)
         
-        reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, mode='min', min_lr=1E-5)
+        reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='val_binary_crossentropy', factor=0.1, patience=2, mode='min', min_lr=1E-5)
             
         history = self.model.fit(
         df_train_x.to_numpy(),
