@@ -299,6 +299,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
         print(f"FOLD: {kfold}, EPOCH: {epoch}, train_loss: {train_loss}\tvalid_loss: {valid_loss}")
 
         if valid_loss < best_loss:
+            early_step = 0
             best_loss = valid_loss
             oof[val_mask] = valid_preds
             torch.save(model.state_dict(), saved_path)
