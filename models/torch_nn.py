@@ -129,6 +129,7 @@ def torch_inference(model, dataloader, device):
 
     return preds
 
+
 class Model(nn.Module):
     def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, activation_type="BASIC"):
         super(Model, self).__init__()
@@ -146,9 +147,27 @@ class Model(nn.Module):
         self.dropout3 = nn.Dropout(dropout)
         self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
 
+    def recalibrate_layer(self, layer):
+        if(torch.isnan(layer.weight_v).sum() > 0):
+            print ('recalibrate layer.weight_v')
+            layer.weight_v = nn.Parameter(torch.where(torch.isnan(layer.weight_v), torch.zeros_like(layer.weight_v), layer.weight_v))
+            layer.weight_v = nn.Parameter(layer.weight_v + 1e-7)
+
+        if(torch.isnan(layer.weight).sum() > 0):
+            print ('recalibrate layer.weight')
+            layer.weight = torch.where(torch.isnan(layer.weight), torch.zeros_like(layer.weight), layer.weight)
+            layer.weight += 1e-7
+
+
     def forward(self, x):
+        self.recalibrate_layer(self.dense1)
+        self.recalibrate_layer(self.dense2)
+        self.recalibrate_layer(self.dense3)
+
+
         x1 = self.batch_norm1(x)
 #         x1 = self.dropout1(x1)
+
         if self.activation_type == "LEAKY":
             x1 = F.leaky_relu(self.dense1(x1))
         elif self.activation_type == "SWISH":
@@ -193,7 +212,24 @@ class Model_Res(nn.Module):
         self.pool = nn.AvgPool1d(3)
         self.dense4 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
 
+    def recalibrate_layer(self, layer):
+        if(torch.isnan(layer.weight_v).sum() > 0):
+            print ('recalibrate layer.weight_v')
+            layer.weight_v = nn.Parameter(torch.where(torch.isnan(layer.weight_v), torch.zeros_like(layer.weight_v), layer.weight_v))
+            layer.weight_v = nn.Parameter(layer.weight_v + 1e-7)
+
+        if(torch.isnan(layer.weight).sum() > 0):
+            print ('recalibrate layer.weight')
+            layer.weight = torch.where(torch.isnan(layer.weight), torch.zeros_like(layer.weight), layer.weight)
+            layer.weight += 1e-7
+
     def forward(self, x):
+        self.recalibrate_layer(self.dense1)
+        self.recalibrate_layer(self.dense2)
+        self.recalibrate_layer(self.dense3)
+        self.recalibrate_layer(self.dense4)
+
+
         x1 = self.batch_norm1(x)
 #         x1 = self.dropout1(x1)
         if self.activation_type == "LEAKY":
