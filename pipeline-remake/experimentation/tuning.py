@@ -37,17 +37,22 @@ def tuning_objective(trial):
     df_x = pd.read_csv(params['feature_csv'])
     df_y = pd.read_csv(params['target_csv'])
     datasets = get_strat_folds(df_x, df_y, 5, 1)
+
     losses = []
     aucs = []
     i = 0
+    df_pred_y = pd.DataFrame(columns=df_x.columns)
     for fold in datasets:
         i += 1
         train_x, train_y = fold['train']
         test_x, test_y = fold['test']
         
-        myModel = Model(len(df_x.columns), len(df_y.columns), params)
-        myModel.run_training(train_x, train_y, test_x, test_y)
-        
+        myModel = Model(df_x, df_y, params)
+        model = myModel.run_training(train_x, train_y, test_x, test_y)
+        pred_y = model.predict(test_x)
+
+        print(pred_y[0])
+
         loss, auc = myModel.get_eval(test_x, test_y)
         losses.append(loss)
         aucs.append(auc)
