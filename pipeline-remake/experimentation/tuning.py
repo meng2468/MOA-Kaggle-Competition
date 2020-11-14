@@ -38,10 +38,13 @@ def tuning_objective(trial):
     df_y = pd.read_csv(params['target_csv'])
     datasets = get_strat_folds(df_x, df_y, 5, 1)
 
-    losses = []
-    aucs = []
+        loss = 0
+    auc = 0
     i = 0
-    df_pred_y = pd.DataFrame(columns=df_x.columns)
+
+    target_y = pd.DataFrame(columns=df_y.columns)
+    pred_y = pd.DataFrame(columns=df_y.columns)
+
     for fold in datasets:
         i += 1
         train_x, train_y = fold['train']
@@ -49,20 +52,23 @@ def tuning_objective(trial):
         
         myModel = Model(df_x, df_y, params)
         model = myModel.run_training(train_x, train_y, test_x, test_y)
-        pred_y = model.predict(test_x)
 
-        print(pred_y[0])
+        if i == 1:
+            target_y = test_y
+            pred_y = pd.DataFrame(model.predict(test_x), columns=df_y.columns)
+        else:
+            target_y = target_y.append(test_y)
+            pred_y = pred_y.append(pd.DataFrame(model.predict(test_x), columns=df_y.columns))
 
-        loss, auc = myModel.get_eval(test_x, test_y)
-        losses.append(loss)
-        aucs.append(auc)
+        print(target_y.shape)
+        print(pred_y.shape)
+        loss, auc = myModel.get_eval(pred_y, target_y)
         trial.report(loss, i)
         if trial.should_prune():
             raise optuna.TrialPruned()
         print("Fold " + str(i) + ": " + str(loss) + " loss, " + str(auc) + " auc")
-    print(losses, aucs)
-
-    return (sum(losses)/len(losses))
+    print("Final loss / auc: " + str(loss) + ' / ' + str(auc))
+    return loss
 
 def param_tuning():
     study = optuna.create_study(pruner=optuna.pruners.MedianPruner())

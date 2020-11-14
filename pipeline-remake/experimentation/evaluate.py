@@ -12,30 +12,6 @@ import keras
 
 from arch_base import Model
 
-def quick_test(params):
-    df_x = pd.read_csv(params['feature_csv'])
-    df_y = pd.read_csv(params['target_csv'])
-
-    datasets = get_strat_folds(df_x, df_y, 5)
-    fold_losses = []
-    fold_aucs = []
-    i = 0
-    for fold in datasets:
-        i += 1
-        train_x, train_y = fold['train']
-        test_x, test_y = fold['test']
-        
-        myModel = Model(df_x, df_y, params)
-        myModel.run_training(train_x, train_y, test_x, test_y)
-        
-        loss, auc = myModel.get_eval(test_x, test_y)
-        fold_losses.append(loss)
-        fold_aucs.append(auc)
-
-        print("Fold " + str(i) + ": " + str(loss) + " loss, " + str(auc) + " auc")
-    
-    print(fold_losses, fold_aucs)
-
 def full_test(params):
     df_x = pd.read_csv(params['feature_csv'])
     df_y = pd.read_csv(params['target_csv'])
@@ -43,34 +19,42 @@ def full_test(params):
     seed_losses = []
     seed_aucs = []
     seeds = 3
+
     for seed in range(seeds):
         datasets = get_strat_folds(df_x, df_y, 5, seed)
-        fold_losses = []
-        fold_aucs = []
+
         i = 0
+        target_y = pd.DataFrame(columns=df_y.columns)
+        pred_y = pd.DataFrame(columns=df_y.columns)
+        fold_loss = -1
+        fold_auc = -1
         for fold in datasets:
             i += 1
             train_x, train_y = fold['train']
             test_x, test_y = fold['test']
             
             myModel = Model(df_x, df_y, params)
-            myModel.run_training(train_x, train_y, test_x, test_y)
-            
-            loss, auc = myModel.get_eval(test_x, test_y)
-            fold_losses.append(loss)
-            fold_aucs.append(auc)
+            model = myModel.run_training(train_x, train_y, test_x, test_y)
 
-            print("Seed " + str(seed+1) + " Fold " + str(i) + ": " + str(loss) + " loss, " + str(auc) + " auc")
+            if i == 1:
+                target_y = test_y
+                pred_y = pd.DataFrame(model.predict(test_x), columns=df_y.columns)
+            else:
+                target_y = target_y.append(test_y)
+                pred_y = pred_y.append(pd.DataFrame(model.predict(test_x), columns=df_y.columns))
+
+            fold_loss, fold_auc = myModel.get_eval(pred_y, target_y)
+            print("Fold " + str(i) + ": " + str(fold_loss) + " loss, " + str(fold_auc) + " auc")
         
-        seed_losses.append(sum(fold_losses)/len(fold_losses))
-        seed_aucs.append(sum(fold_aucs)/len(fold_aucs))
+        seed_losses.append(fold_loss)
+        seed_aucs.append(fold_auc)
         print('-'*40)
         print("Seed " + str(seed+1)+ ":")
-        print(sum(fold_losses)/len(fold_losses), sum(fold_aucs)/len(fold_aucs))
-        
+        print(fold_loss, fold_auc)
+
     print("Average performance: " + str(sum(seed_losses)/seeds) + ", " + str(sum(seed_aucs)/seeds))
     log_evaluation(params, sum(seed_losses)/seeds, sum(seed_aucs)/seeds)
-
+    
 def log_evaluation(params, loss, auc):
     print('log_evaluation: writing experiment to csv')
     df = pd.read_csv('../logs/experiment_results.csv')
