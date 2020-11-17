@@ -163,9 +163,9 @@ def get_df(var, gpca, cpca):
     df_test_x = pd.read_csv('../input/lish-moa/test_features.csv')
 
     print("data_eng: augment df_x df_test_x")
-    df_x, df_y = get_aug_df(df_x, df_test_x)
+    df_x, df_test_x = get_aug_df(df_x, df_test_x)
 
-    print("data_eng: engineer and select " + str(var) +'v ' + str(gpca) + 'gc ' + str(cpca) + 'cpca')
+    print("data_eng: engineer and select " + str(var) +'v ' + str(gpca) + 'gc ' + str(cpca) + 'cp')
     df_x, df_y, df_test_x = get_eng_df(df_x, df_y, df_test_x, var, gpca, cpca)
 
     print('data_eng: return df_x df_y df_test_x')
