@@ -73,10 +73,10 @@ set_seed(seed)
 data_path = ""
 no_ctl = True
 scale = "rankgauss"
-variance_threshould = 0.62
+variance_threshould = 0.7
 decompo = "PCA"
-ncompo_genes = 80
-ncompo_cells = 10
+ncompo_genes = 600
+ncompo_cells = 50
 encoding = "dummy"
 
 # %% [markdown]
@@ -258,6 +258,32 @@ class LogitsLogLoss(Metric):
         aux = (1 - y_true) * np.log(1 - logits + 1e-15) + y_true * np.log(logits + 1e-15)
         return np.mean(-aux)
 
+from torch.nn.modules.loss import _WeightedLoss
+class SmoothBCEwLogits(_WeightedLoss):
+    def __init__(self, weight=None, reduction='mean', smoothing=0.0):
+        super().__init__(weight=weight, reduction=reduction)
+        self.smoothing = smoothing
+        self.weight = weight
+        self.reduction = reduction
+
+    @staticmethod
+    def _smooth(targets:torch.Tensor, n_labels:int, smoothing=0.0):
+        assert 0 <= smoothing < 1
+        with torch.no_grad():
+            targets = targets * (1.0 - smoothing) + 0.5 * smoothing
+        return targets
+
+    def forward(self, inputs, targets):
+        targets = SmoothBCEwLogits._smooth(targets, inputs.size(-1),
+            self.smoothing)
+        loss = F.binary_cross_entropy_with_logits(inputs, targets,self.weight)
+
+        if  self.reduction == 'sum':
+            loss = loss.sum()
+        elif  self.reduction == 'mean':
+            loss = loss.mean()
+
+        return loss
 # %% [markdown]
 # ## <font color = "green">Model Parameters</font>
 
@@ -269,7 +295,7 @@ class LogitsLogLoss(Metric):
 
 # %% [code]
 
-NB_SPLITS = 7 # 7
+NB_SPLITS = 5 # 7
 mskf = MultilabelStratifiedKFold(n_splits = NB_SPLITS, random_state = 0, shuffle = True)
 
 def objective(trial):
@@ -301,8 +327,8 @@ def objective(trial):
         verbose = 10
     )
     
-    batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
-    virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
+    # batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
+    # virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
     batch_size = 1024
     virtual_batch_size = 32
 
@@ -331,8 +357,7 @@ def objective(trial):
             virtual_batch_size = virtual_batch_size, #32,
             num_workers = 1,
             drop_last = False,
-            # To use binary cross entropy because this is not a regression problem
-            loss_fn = F.binary_cross_entropy_with_logits
+            loss_fn = SmoothBCEwLogits(smoothing=5e-5)
         )
         print(y_, '-' * 60)
         
@@ -366,7 +391,7 @@ def objective(trial):
     return np.mean(scores)
 
 study = optuna.create_study(direction='maximize')
-study.optimize(objective, n_trials=10)
+study.optimize(objective, n_trials=30)
 print(study.best_params)
 
 # %% [markdown]
