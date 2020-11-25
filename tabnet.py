@@ -262,24 +262,7 @@ class LogitsLogLoss(Metric):
 # ## <font color = "green">Model Parameters</font>
 
 # %% [code]
-MAX_EPOCH = 200
-# n_d and n_a are different from the original work, 32 instead of 24
-# This is the first change in the code from the original
-tabnet_params = dict(
-    n_d = 32,
-    n_a = 32,
-    n_steps = 1,
-    gamma = 1.3,
-    lambda_sparse = 0,
-    optimizer_fn = optim.Adam,
-    optimizer_params = dict(lr = 2e-2, weight_decay = 1e-5),
-    mask_type = "entmax",
-    scheduler_params = dict(
-        mode = "min", patience = 5, min_lr = 1e-5, factor = 0.9),
-    scheduler_fn = ReduceLROnPlateau,
-    seed = seed,
-    verbose = 10
-)
+
 
 # %% [markdown]
 # # <font color = "seagreen">Training</font>
@@ -296,9 +279,34 @@ def objective(trial):
     scores = []
     scores_auc = []
 
+    MAX_EPOCH = 200
+    # n_d and n_a are different from the original work, 32 instead of 24
+    # This is the first change in the code from the original
+    tabnet_params = dict(
+        n_d = trial.suggest_int('n_d', 16, 64, 6),
+        n_a = trial.suggest_int('n_a', 32, 128, 12),
+        n_independent = 2,
+        n_shared = 2,
+        n_steps = 1,
+        gamma = 1.3,
+        lambda_sparse = 0,
+        optimizer_fn = optim.Adam,
+        # optimizer_params = dict(lr = trial.suggest_loguniform("learning_rate", 1e-3, 1e-2), weight_decay = 1e-5), #2e-2 1e-5
+        optimizer_params = dict(lr = 2e-2, weight_decay = 1e-5), #2e-2 1e-5
+        mask_type = "entmax",
+        scheduler_params = dict(
+            mode = "min", patience = 5, min_lr = 1e-5, factor = 0.9),
+        scheduler_fn = ReduceLROnPlateau,
+        seed = seed,
+        verbose = 10
+    )
+    
     batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
     virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
-    print('Running study with' + str(batch_size) + 'bs, ' + str(virtual_batch_size) + 'vbs')
+    batch_size = 1024
+    virtual_batch_size = 32
+
+    print('Running study with ' + str(batch_size) + 'bs, ' + str(virtual_batch_size) + 'vbs')
     for fold_nb, (train_idx, val_idx) in enumerate(mskf.split(train_df, targets)):
         print(b_,"FOLDS: ", r_, fold_nb + 1)
         print(g_, '*' * 60, c_)
