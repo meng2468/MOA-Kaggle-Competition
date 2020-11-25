@@ -296,6 +296,9 @@ def objective(trial):
     scores = []
     scores_auc = []
 
+    batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
+    virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
+    print('Running study with' + str(batch_size) + 'bs, ' + str(virtual_batch_size) + 'vbs')
     for fold_nb, (train_idx, val_idx) in enumerate(mskf.split(train_df, targets)):
         print(b_,"FOLDS: ", r_, fold_nb + 1)
         print(g_, '*' * 60, c_)
@@ -316,8 +319,8 @@ def objective(trial):
             eval_metric = ["logits_ll"],
             max_epochs = MAX_EPOCH,
             patience = 20,
-            batch_size = trial.suggest_int('batch_size', 128, 1024, 128), #1024, 
-            virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32), #32,
+            batch_size = batch_size, #1024, 
+            virtual_batch_size = virtual_batch_size, #32,
             num_workers = 1,
             drop_last = False,
             # To use binary cross entropy because this is not a regression problem
