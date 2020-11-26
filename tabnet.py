@@ -120,37 +120,10 @@ tmp = data_all[cols_numeric].loc[:, mask]
 data_all = pd.concat([data_all[["sig_id", "cp_type", "cp_time", "cp_dose"]], tmp], axis = 1)
 cols_numeric = [feat for feat in list(data_all.columns) if feat not in ["sig_id", "cp_type", "cp_time", "cp_dose"]]
 
-def scale_minmax(col):
-    return (col - col.min()) / (col.max() - col.min())
-
-def scale_norm(col):
-    return (col - col.mean()) / col.std()
-
-if scale == "boxcox":
-    print(b_, "boxcox")
-    data_all[cols_numeric] = data_all[cols_numeric].apply(scale_minmax, axis = 0)
-    trans = []
-    for feat in cols_numeric:
-        trans_var, lambda_var = stats.boxcox(data_all[feat].dropna() + 1)
-        trans.append(scale_minmax(trans_var))
-    data_all[cols_numeric] = np.asarray(trans).T
-    
-elif scale == "norm":
-    print(b_, "norm")
-    data_all[cols_numeric] = data_all[cols_numeric].apply(scale_norm, axis = 0)
-    
-elif scale == "minmax":
-    print(b_, "minmax")
-    data_all[cols_numeric] = data_all[cols_numeric].apply(scale_minmax, axis = 0)
-    
-elif scale == "rankgauss":
-    ### Rank Gauss ###
-    print(b_, "Rank Gauss")
-    scaler = GaussRankScaler()
-    data_all[cols_numeric] = scaler.fit_transform(data_all[cols_numeric])
-    
-else:
-    pass
+### Rank Gauss ###
+print(b_, "Rank Gauss")
+scaler = GaussRankScaler()
+data_all[cols_numeric] = scaler.fit_transform(data_all[cols_numeric])
 
 # %% [markdown]
 # ## <font color = "green">Principal Component Analysis</font>
@@ -260,6 +233,7 @@ class LogitsLogLoss(Metric):
         return np.mean(-aux)
 
 from torch.nn.modules.loss import _WeightedLoss
+
 class SmoothBCEwLogits(_WeightedLoss):
     def __init__(self, weight=None, reduction='mean', smoothing=0.0):
         super().__init__(weight=weight, reduction=reduction)
