@@ -7,6 +7,7 @@ import pickle
 import random
 import warnings
 import optuna
+from datetime import date
 warnings.filterwarnings("ignore")
 sys.path.append('gauss_rank_scaler/')
 os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
@@ -73,7 +74,7 @@ set_seed(seed)
 data_path = ""
 no_ctl = True
 scale = "rankgauss"
-variance_threshould = 0.7
+variance_threshould = 0.8
 decompo = "PCA"
 ncompo_genes = 600
 ncompo_cells = 50
@@ -311,14 +312,16 @@ def objective(trial):
     tabnet_params = dict(
         n_d = trial.suggest_int('n_d', 16, 64, 6),
         n_a = trial.suggest_int('n_a', 32, 128, 12),
+        # n_d = 32,
+        # n_a = 32,
         n_independent = 2,
         n_shared = 2,
         n_steps = 1,
         gamma = 1.3,
         lambda_sparse = 0,
         optimizer_fn = optim.Adam,
-        # optimizer_params = dict(lr = trial.suggest_loguniform("learning_rate", 1e-3, 1e-2), weight_decay = 1e-5), #2e-2 1e-5
-        optimizer_params = dict(lr = 2e-2, weight_decay = 1e-5), #2e-2 1e-5
+        optimizer_params = dict(lr = trial.suggest_loguniform("learning_rate", 1e-3, 1e-2), weight_decay = 1e-5), #2e-2 1e-5
+        # optimizer_params = dict(lr = 2e-2, weight_decay = 1e-5), #2e-2 1e-5
         mask_type = "entmax",
         scheduler_params = dict(
             mode = "min", patience = 5, min_lr = 1e-5, factor = 0.9),
@@ -327,10 +330,10 @@ def objective(trial):
         verbose = 10
     )
     
-    # batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
-    # virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
-    batch_size = 1024
-    virtual_batch_size = 32
+    batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
+    virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
+    # batch_size = 1024
+    # virtual_batch_size = 32
 
     print('Running study with ' + str(batch_size) + 'bs, ' + str(virtual_batch_size) + 'vbs')
     for fold_nb, (train_idx, val_idx) in enumerate(mskf.split(train_df, targets)):
@@ -390,33 +393,35 @@ def objective(trial):
     print(f"{b_}Average CV: {r_}{np.mean(scores)}")
     return np.mean(scores)
 
-study = optuna.create_study(direction='maximize')
-study.optimize(objective, n_trials=30)
+study = optuna.create_study(direction='minimize')
+study.optimize(objective, n_trials=40)
 print(study.best_params)
+
+df = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))
+df.to_csv('drive/MyDrive/moa/tb_tuning'+'date.today()'+'.csv')
 
 # %% [markdown]
 # # <font color = "seagreen">Submission</font>
 
 # %% [code]
-all_feat = [col for col in submission.columns if col not in ["sig_id"]]
-# To obtain the same lenght of test_preds_all and submission
-test = pd.read_csv(data_path + "test_features.csv")
-sig_id = test[test["cp_type"] != "ctl_vehicle"].sig_id.reset_index(drop = True)
-tmp = pd.DataFrame(test_preds_all.mean(axis = 0), columns = all_feat)
-tmp["sig_id"] = sig_id
+# all_feat = [col for col in submission.columns if col not in ["sig_id"]]
+# # To obtain the same lenght of test_preds_all and submission
+# test = pd.read_csv(data_path + "test_features.csv")
+# sig_id = test[test["cp_type"] != "ctl_vehicle"].sig_id.reset_index(drop = True)
+# tmp = pd.DataFrame(test_preds_all.mean(axis = 0), columns = all_feat)
+# tmp["sig_id"] = sig_id
 
-submission = pd.merge(test[["sig_id"]], tmp, on = "sig_id", how = "left")
-submission.fillna(0, inplace = True)
+# submission = pd.merge(test[["sig_id"]], tmp, on = "sig_id", how = "left")
+# submission.fillna(0, inplace = True)
 
 #submission[all_feat] = tmp.mean(axis = 0)
 
 # Set control to 0
 #submission.loc[test["cp_type"] == 0, submission.columns[1:]] = 0
-submission.to_csv("submission.csv", index = None)
-submission.head()
+# submission.to_csv("submission.csv", index = None)
+# submission.head()
 
-# %% [code]
-print(f"{b_}submission.shape: {r_}{submission.shape}")
+# print(f"{b_}submission.shape: {r_}{submission.shape}")
 
 # %% [markdown]
 # <div class = "alert alert-block alert-info">
