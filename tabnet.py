@@ -367,12 +367,12 @@ def objective(trial):
     print(f"{b_}Average CV: {r_}{np.mean(scores)}")
     return np.mean(scores)
 
-study = optuna.create_study(direction='minimize')
-study.optimize(objective, n_trials=40)
-print(study.best_params)
-
-df = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))
-df.to_csv('drive/MyDrive/moa/tb_tuning'+'date.today()'+'.csv')
+study_name = 'tabnet_600g50c'
+for _ in range(100):
+    study = optuna.create_study(study_name=study_name, storage='sqlite:///drive/MyDrive/moa/'+study_name+'.db', load_if_exists=True)
+    study.optimize(objective, n_trials=3)
+    df = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))
+    df.to_csv('drive/MyDrive/moa/tb_tuning'+date.today()+'.csv')
 
 # %% [markdown]
 # # <font color = "seagreen">Submission</font>
