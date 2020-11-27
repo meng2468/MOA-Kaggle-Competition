@@ -187,7 +187,7 @@ def add_clustering_feature(data, g_n_cluster=22, c_n_cluster=4, pca_n_cluster=5,
                     load_path_g=None, load_path_c=None, load_path_pca=None ):
 
     GENES, CELLS = get_genes_cell_header(data)
-    PCA = [col for col in train_features.columns if col.startswith('pca')]
+    PCA = [col for col in data.columns if col.startswith('pca')]
 
     # gnenes
     clustering_genes = get_clustering_features(data[GENES], g_n_cluster, name="cluster_g", 
