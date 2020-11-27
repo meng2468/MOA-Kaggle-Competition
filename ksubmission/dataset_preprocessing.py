@@ -15,7 +15,7 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.cluster import KMeans
 
 ### ========================================== Feature Adding
-def one_hot_encoding(data, column, values, drop_first=True):
+def one_hot_encoding(data, column, values, drop_first=True, replace=False):
     '''
     replace columns with one-hot encoding
 
@@ -31,13 +31,18 @@ def one_hot_encoding(data, column, values, drop_first=True):
 
     print(f"On-Hot Encoded {column}: Adding {len(values)-2} columns")
 
-    ## insert
-    loc = data.columns.get_loc(column)
-    for c in reversed(onehot.columns):
-        data.insert(loc,c, onehot[c])
+    if replace:
+        ## insert
+        loc = data.columns.get_loc(column)
+        for c in reversed(onehot.columns):
+            data.insert(loc,c, onehot[c])
 
-    ## remove
-    return data.drop(columns=column)
+        ## remove
+        return data.drop(columns=column)
+    else:
+        data = data.drop(columns=column)
+        return pd.concat((data.reset_index(drop=True, inplace=False) , onehot), axis=1)
+
 
 def get_PCA_features(data, n_comp, suffix="pca-", random_state=42, save_path="pca.pkl", load_path=None):
     '''
@@ -152,9 +157,9 @@ def add_stat_feature(data):
     print(f"Add #{data_with_stat.shape[1]} Stats features")
     return data_with_stat
 
-def one_hot_encode_moa(data, drop_columns=True):
-    data = one_hot_encoding(data, "cp_time", [24,48,72], drop_columns)
-    data = one_hot_encoding(data, "cp_dose", ["D1","D2"], drop_columns)
+def one_hot_encode_moa(data, drop_columns=True, replace=False:
+    data = one_hot_encoding(data, "cp_time", [24,48,72], drop_columns, replace)
+    data = one_hot_encoding(data, "cp_dose", ["D1","D2"], drop_columns, replace)
     return data
 
 def add_PCA_feature(data, g_n_comp=50, c_n_comp=15, 
