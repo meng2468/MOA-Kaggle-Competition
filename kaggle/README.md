@@ -5,11 +5,11 @@
 - [ ] Read data
 - [ ] Save preprocessing values - PCA and removeColumn ...
 - [ ] Apply preprocessing pipelines
-- [ ] cross validation split
+- [ ] cross validation split (low priority)
 - [ ] Model - Initialization with params (for training) (low priority)
 - [ ] Model - save weight (for training) (low priority)
 - [ ] Model - Initialization from weight (for prediction)
-    - [ ] NN with Transfer Learning
+    - [ ] NN with Transfer Learning (meta feature) [link](https://www.kaggle.com/malteadrianmeng/moa-pretained-non-scored-targets-as-meta-features)
     - [ ] NN with Clustering
     - [ ] Tabnet
 - [ ] Output submission csv
