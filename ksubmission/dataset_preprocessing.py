@@ -15,7 +15,7 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.cluster import KMeans
 
 ### ========================================== Feature Adding
-def one_hot_encoding(data, column, values):
+def one_hot_encoding(data, column, values, drop_first=True):
     '''
     replace columns with one-hot encoding
 
@@ -27,7 +27,7 @@ def one_hot_encoding(data, column, values):
     '''
     data[column] = data[column].astype(CategoricalDtype(values))
 
-    onehot = pd.get_dummies(data[column],prefix=column, drop_first=True)
+    onehot = pd.get_dummies(data[column],prefix=column, drop_first=drop_first)
 
     print(f"On-Hot Encoded {column}: Adding {len(values)-2} columns")
 
@@ -259,6 +259,34 @@ def preprocessing_pipeline(train_features, train_targets, test_features):
 
     test_features = drop_cp_type(test_features)
     test_features = one_hot_encode_moa(test_features)
+    
+    print("SIZE :", "TRAIN", train_features.shape)
+    return train_features, train_targets, test_features
+
+def preprocessing_NN_meta(train_features, train_targets, test_features):
+
+    train_len = train_features.shape[0]
+    test_len = test_features.shape[0]
+
+    data = pd.concat((train_features, test_features))
+    data.iloc[:,4:] = gauss_rank(data.iloc[:,4:])
+    data = add_PCA_feature(data, g_n_comp=600, c_n_comp=50)
+
+    remove_cols = get_variance_encoding_columns(data.iloc[:, 4:], 0.87)
+    data = add_clustering_feature(data, g_n_cluster=22, c_n_cluster=4, pca_n_cluster=5)
+    data = add_stat_feature(data)
+
+    data = drop_columns(data, remove_cols)
+
+    train_features, test_features = split_moa_train_test(data, train_len, test_len)
+
+    train_features, train_targets = remove_ctl_vehicle(train_features, train_targets)
+
+    train_features = drop_cp_type(train_features)
+    test_features = drop_cp_type(test_features)
+
+    train_features = pd.get_dummies(train_features, columns=['cp_time','cp_dose'])
+    test_features = pd.get_dummies(test_features, columns=['cp_time','cp_dose'])
     
     print("SIZE :", "TRAIN", train_features.shape)
     return train_features, train_targets, test_features
