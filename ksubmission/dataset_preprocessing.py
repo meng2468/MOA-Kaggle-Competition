@@ -171,11 +171,11 @@ def add_PCA_feature(data, g_n_comp=50, c_n_comp=15,
     GENES, CELLS = get_genes_cell_header(data)
 
     # gnenes
-    pca_genes = get_PCA_features(data[GENES], g_n_comp, suffix="pca_G-", save_path=save_path_g, load_path==load_path_g)
+    pca_genes = get_PCA_features(data[GENES], g_n_comp, suffix="pca_G-", save_path=save_path_g, load_path=load_path_g)
     print(f"Add #{pca_genes.shape[1]} PCA G features")
 
     # cells
-    pca_cells = get_PCA_features(data[CELLS], c_n_comp, suffix="pca_C-", save_path=save_path_c, load_path==load_path_c)
+    pca_cells = get_PCA_features(data[CELLS], c_n_comp, suffix="pca_C-", save_path=save_path_c, load_path=load_path_c)
     print(f"Add #{pca_cells.shape[1]} PCA C features")
 
     data_with_pca = pd.concat((data.reset_index(drop=True, inplace=False) , pca_genes, pca_cells), axis=1)
