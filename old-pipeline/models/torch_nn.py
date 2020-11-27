@@ -21,6 +21,7 @@ DEFAULT_PARAM = {
     "DEVICE" :  ('cuda' if torch.cuda.is_available() else 'cpu'),
     "EPOCHS" :  2,  #30
     "LEARNING_RATE" :  1e-3,
+    "MAX_LR": 1e-2, ## for 1 cycle learning
     "WEIGHT_DECAY" :  1e-5,
     "EARLY_STOPPING_STEPS" :  10,
     "EARLY_STOP" :  False,
@@ -30,12 +31,13 @@ DEFAULT_PARAM = {
     "NFOLDS" :  5,
 
     ## Model
+    "MODEL": "RESNET",
     "NUM_FEATURE" : 930,
     "NUM_TARAGET" : 206,
     "HIDDENT_SIZE" : 1024,
     "LOSS_SMOOTHING": 0.001, # remove if not apply loss smoothing
     "DROPOUT" : 0.25,
-    "RELU_TYPE": "LEAKY", # "BASIC" | "LEAKY"
+    "ACTIVATION_TYPE": "LEAKY", # "BASIC" | "LEAKY" ｜ "SWISH"
 }
 
 def seed_everything(seed=42):
@@ -127,10 +129,11 @@ def torch_inference(model, dataloader, device):
 
     return preds
 
+
 class Model(nn.Module):
-    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, relu_type="BASIC"):
+    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, activation_type="BASIC"):
         super(Model, self).__init__()
-        self.relu_type = relu_type
+        self.activation_type = activation_type
 
         self.batch_norm1 = nn.BatchNorm1d(num_features)
 #         self.dropout1 = nn.Dropout(0.2)
@@ -144,26 +147,121 @@ class Model(nn.Module):
         self.dropout3 = nn.Dropout(dropout)
         self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
 
+    def recalibrate_layer(self, layer):
+        if(torch.isnan(layer.weight_v).sum() > 0):
+            print ('recalibrate layer.weight_v')
+            layer.weight_v = nn.Parameter(torch.where(torch.isnan(layer.weight_v), torch.zeros_like(layer.weight_v), layer.weight_v))
+            layer.weight_v = nn.Parameter(layer.weight_v + 1e-7)
+
+        if(torch.isnan(layer.weight).sum() > 0):
+            print ('recalibrate layer.weight')
+            layer.weight = torch.where(torch.isnan(layer.weight), torch.zeros_like(layer.weight), layer.weight)
+            layer.weight += 1e-7
+
+
     def forward(self, x):
-        x = self.batch_norm1(x)
-#         x = self.dropout1(x)
-        if self.relu_type == "LEAKY":
-            x = F.leaky_relu(self.dense1(x))
+        self.recalibrate_layer(self.dense1)
+        self.recalibrate_layer(self.dense2)
+        self.recalibrate_layer(self.dense3)
+
+
+        x1 = self.batch_norm1(x)
+#         x1 = self.dropout1(x1)
+
+        if self.activation_type == "LEAKY":
+            x1 = F.leaky_relu(self.dense1(x1))
+        elif self.activation_type == "SWISH":
+            x1 = F.hardswish(self.dense1(x1))
         else:
-            x = F.relu(self.dense1(x))
+            x1 = F.relu(self.dense1(x1))
 
-        x = self.batch_norm2(x)
-        x = self.dropout2(x)
-        if self.relu_type == "LEAKY":
-            x = F.leaky_relu(self.dense2(x))
+        x2 = self.batch_norm2(x1)
+        x2 = self.dropout2(x2)
+        if self.activation_type == "LEAKY":
+            x2 = F.leaky_relu(self.dense2(x2))
+        elif self.activation_type == "SWISH":
+            x2 = F.hardswish(self.dense2(x2))
         else:
-            x = F.relu(self.dense2(x))
+            x2 = F.relu(self.dense2(x2))
 
-        x = self.batch_norm3(x)
-        x = self.dropout3(x)
-        x = self.dense3(x)
+        x3 = self.batch_norm3(x2)
+        x3 = self.dropout3(x3)
+        x3 = self.dense3(x3)
 
-        return x
+        return x3
+
+class Model_Res(nn.Module):
+    def __init__(self, num_features, num_targets, hidden_size, dropout=0.5, activation_type="BASIC"):
+        super(Model_Res, self).__init__()
+
+        self.activation_type = activation_type
+
+        self.batch_norm1 = nn.BatchNorm1d(num_features)
+#         self.dropout1 = nn.Dropout(0.2)
+        self.dense1 = nn.utils.weight_norm(nn.Linear(num_features, hidden_size))
+
+        self.batch_norm2 = nn.BatchNorm1d(hidden_size)
+        self.dropout2 = nn.Dropout(dropout)
+        self.dense2 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
+
+        self.batch_norm3 = nn.BatchNorm1d(hidden_size)
+        self.dropout3 = nn.Dropout(dropout)
+        self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
+
+#         self.conv = nn.Conv1d(hidden_size, num_targets, 3)
+        self.pool = nn.AvgPool1d(3)
+        self.dense4 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
+
+    def recalibrate_layer(self, layer):
+        if(torch.isnan(layer.weight_v).sum() > 0):
+            print ('recalibrate layer.weight_v')
+            layer.weight_v = nn.Parameter(torch.where(torch.isnan(layer.weight_v), torch.zeros_like(layer.weight_v), layer.weight_v))
+            layer.weight_v = nn.Parameter(layer.weight_v + 1e-7)
+
+        if(torch.isnan(layer.weight).sum() > 0):
+            print ('recalibrate layer.weight')
+            layer.weight = torch.where(torch.isnan(layer.weight), torch.zeros_like(layer.weight), layer.weight)
+            layer.weight += 1e-7
+
+    def forward(self, x):
+        self.recalibrate_layer(self.dense1)
+        self.recalibrate_layer(self.dense2)
+        self.recalibrate_layer(self.dense3)
+        self.recalibrate_layer(self.dense4)
+
+
+        x1 = self.batch_norm1(x)
+#         x1 = self.dropout1(x1)
+        if self.activation_type == "LEAKY":
+            x1 = F.leaky_relu(self.dense1(x1))
+        elif self.activation_type == "SWISH":
+            x1 = F.hardswish(self.dense1(x1))
+        else:
+            x1 = F.relu(self.dense1(x1))
+
+        x2 = self.batch_norm2(x1)
+        x2 = self.dropout2(x2)
+        if self.activation_type == "LEAKY":
+            x2 = F.leaky_relu(self.dense2(x2))
+        elif self.activation_type == "SWISH":
+            x2 = F.hardswish(self.dense2(x2))
+        else:
+            x2 = F.relu(self.dense2(x2))
+
+        x3 = self.batch_norm3(x2)
+        x3 = self.dropout3(x3)
+        x3 = self.dense3(x3)
+
+#         stack = torch.stack([x1,x2,x3], dim=2)
+# #         y = self.conv(stack)
+#         y = self.pool(stack)
+#         y = y.squeeze(-1)
+
+        y = torch.add(x1, x3)
+
+        y = self.dense4(y)
+
+        return y
 
 def kfold_train_valid_dataloader(X, Y, valid_mask, batch_size):
     '''
@@ -189,13 +287,24 @@ def kfold_train_valid_dataloader(X, Y, valid_mask, batch_size):
 def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
     trainloader, validloader = kfold_train_valid_dataloader(X, Y, val_mask, PARAM["BATCH_SIZE"])
 
-    model = Model(
-        num_features=PARAM["NUM_FEATURE"],
-        num_targets=PARAM["NUM_TARAGET"],
-        hidden_size=PARAM["HIDDENT_SIZE"],
-        dropout=PARAM.get("DROPOUT", 0.5),
-        relu_type=PARAM.get("RELU_TYPE", "BASIC"),
-    )
+    model_type = PARAM.get("MODEL", "NN")
+    if model_type == 'RESNET':
+        print("RESNET MODEL")
+        model = Model_Res(
+            num_features=PARAM["NUM_FEATURE"],
+            num_targets=PARAM["NUM_TARAGET"],
+            hidden_size=PARAM["HIDDENT_SIZE"],
+            dropout=PARAM.get("DROPOUT", 0.5),
+            activation_type=PARAM.get("ACTIVATION_TYPE", "BASIC"),
+        )
+    else:
+        model = Model(
+            num_features=PARAM["NUM_FEATURE"],
+            num_targets=PARAM["NUM_TARAGET"],
+            hidden_size=PARAM["HIDDENT_SIZE"],
+            dropout=PARAM.get("DROPOUT", 0.5),
+            activation_type=PARAM.get("ACTIVATION_TYPE", "BASIC"),
+        )
     model.to(PARAM["DEVICE"])
 
     optimizer = torch.optim.Adam(model.parameters(),
@@ -203,7 +312,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
                                  weight_decay=PARAM["WEIGHT_DECAY"])
 
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e3,
-                                              max_lr=1e-2, epochs=PARAM["EPOCHS"], steps_per_epoch=len(trainloader))
+                                              max_lr=PARAM["MAX_LR"], epochs=PARAM["EPOCHS"], steps_per_epoch=len(trainloader))
 
 
     loss_fn = nn.BCEWithLogitsLoss()
@@ -226,6 +335,7 @@ def train_one_fold(kfold, X,Y, val_mask, saved_path, PARAM=DEFAULT_PARAM):
         print(f"FOLD: {kfold}, EPOCH: {epoch}, train_loss: {train_loss}\tvalid_loss: {valid_loss}")
 
         if valid_loss < best_loss:
+            early_step = 0
             best_loss = valid_loss
             oof[val_mask] = valid_preds
             torch.save(model.state_dict(), saved_path)
@@ -264,13 +374,21 @@ def torch_prediction(X, saved_model, PARAM=DEFAULT_PARAM):
     testdataset = TestDataset(X.values)
     testloader = torch.utils.data.DataLoader(testdataset, batch_size=PARAM["BATCH_SIZE"], shuffle=False)
 
-    model = Model(
-        num_features=PARAM["NUM_FEATURE"],
-        num_targets=PARAM["NUM_TARAGET"],
-        hidden_size=PARAM["HIDDENT_SIZE"],
-        relu_type=PARAM.get("RELU_TYPE", "BASIC"),
-    )
-
+    model_type = PARAM.get("MODEL", "NN")
+    if model_type == 'RESNET':
+        model = Model_Res(
+            num_features=PARAM["NUM_FEATURE"],
+            num_targets=PARAM["NUM_TARAGET"],
+            hidden_size=PARAM["HIDDENT_SIZE"],
+            activation_type=PARAM.get("ACTIVATION_TYPE", "BASIC"),
+        )
+    else:
+        model = Model(
+            num_features=PARAM["NUM_FEATURE"],
+            num_targets=PARAM["NUM_TARAGET"],
+            hidden_size=PARAM["HIDDENT_SIZE"],
+            activation_type=PARAM.get("ACTIVATION_TYPE", "BASIC"),
+        )
     model.load_state_dict(torch.load(saved_model))
     model.to(PARAM["DEVICE"])
 
