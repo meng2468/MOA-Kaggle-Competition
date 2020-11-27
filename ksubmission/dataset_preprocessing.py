@@ -157,7 +157,7 @@ def add_stat_feature(data):
     print(f"Add #{data_with_stat.shape[1]} Stats features")
     return data_with_stat
 
-def one_hot_encode_moa(data, drop_columns=True, replace=False:
+def one_hot_encode_moa(data, drop_columns=True, replace=False):
     data = one_hot_encoding(data, "cp_time", [24,48,72], drop_columns, replace)
     data = one_hot_encoding(data, "cp_dose", ["D1","D2"], drop_columns, replace)
     return data
