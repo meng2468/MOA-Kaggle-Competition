@@ -157,7 +157,7 @@ def one_hot_encode_moa(data):
     return data
 
 def add_PCA_feature(data, g_n_comp=50, c_n_comp=15, 
-                    save_path_g="gpca.pkl", save_path_c="cpca.pkl"
+                    save_path_g="gpca.pkl", save_path_c="cpca.pkl",
                     load_path_g=None, load_path_c=None ):
     '''
     extend data with PCA decomposition
@@ -183,7 +183,7 @@ def add_PCA_feature(data, g_n_comp=50, c_n_comp=15,
     return data_with_pca
 
 def add_clustering_feature(data, g_n_cluster=22, c_n_cluster=4, pca_n_cluster=5, 
-                    save_path_g="g_cluster.pkl", save_path_c="c_cluster.pkl", save_path_pca="pca_cluster.pkl"
+                    save_path_g="g_cluster.pkl", save_path_c="c_cluster.pkl", save_path_pca="pca_cluster.pkl",
                     load_path_g=None, load_path_c=None, load_path_pca=None ):
 
     GENES, CELLS = get_genes_cell_header(data)
