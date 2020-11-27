@@ -304,10 +304,10 @@ def objective(trial):
         verbose = 10
     )
     
-    batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
-    virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
-    # batch_size = 1024
-    # virtual_batch_size = 32
+    # batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
+    # virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
+    batch_size = 256
+    virtual_batch_size = 32
 
     print('Running study with ' + str(batch_size) + 'bs, ' + str(virtual_batch_size) + 'vbs')
     for fold_nb, (train_idx, val_idx) in enumerate(mskf.split(train_df, targets)):
@@ -367,12 +367,12 @@ def objective(trial):
     print(f"{b_}Average CV: {r_}{np.mean(scores)}")
     return np.mean(scores)
 
-study_name = 'tabnet_600g50c'
+study_name = 'tabnet_600g50c_set_learning'
 for _ in range(100):
     study = optuna.create_study(study_name=study_name, storage='sqlite:///drive/MyDrive/moa/'+study_name+'.db', load_if_exists=True)
     study.optimize(objective, n_trials=3)
     df = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))
-    df.to_csv('drive/MyDrive/moa/tb_tuning'+date.today()+'.csv')
+    df.to_csv('drive/MyDrive/moa/tb_tuning_final.csv')
 
 # %% [markdown]
 # # <font color = "seagreen">Submission</font>
