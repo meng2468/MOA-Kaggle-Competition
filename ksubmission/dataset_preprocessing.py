@@ -101,7 +101,7 @@ def split_moa_train_test(data, train_len, test_len):
     test_data = data[-test_len:].reset_index(drop=True, inplace=False)
     return (train_data, test_data)
 
-def add_stat_feature(data):
+def get_stat_feature(data):
     GSQUARE=['g-574','g-211','g-216','g-0','g-255','g-577','g-153','g-389','g-60','g-370','g-248','g-167','g-203','g-177','g-301','g-332','g-517','g-6','g-744','g-224','g-162','g-3','g-736','g-486','g-283','g-22','g-359','g-361','g-440','g-335','g-106','g-307','g-745','g-146','g-416','g-298','g-666','g-91','g-17','g-549','g-145','g-157','g-768','g-568','g-396']
 
     GENES, CELLS = get_genes_cell_header(data)
@@ -152,10 +152,11 @@ def add_stat_feature(data):
             
     for feature in GSQUARE:
         out_df[f'{feature}_squared'] = df[feature] ** 2        
-        
-    data_with_stat = pd.concat((data.reset_index(drop=True, inplace=False) , out_df), axis=1)
+
     print(f"Add #{data_with_stat.shape[1]} Stats features")
-    return data_with_stat
+    return out_df    
+    # data_with_stat = pd.concat((data.reset_index(drop=True, inplace=False) , out_df), axis=1)
+    # return data_with_stat
 
 def one_hot_encode_moa(data, drop_columns=True, replace=False):
     data = one_hot_encoding(data, "cp_time", [24,48,72], drop_columns, replace)
@@ -275,12 +276,19 @@ def preprocessing_NN_meta(train_features, train_targets, test_features):
     test_len = test_features.shape[0]
 
     data = pd.concat((train_features, test_features))
-    data.iloc[:,4:] = gauss_rank(data.iloc[:,4:])
+    data_ori = data.copy()
+
+    train_features.iloc[:,4:] = gauss_rank(train_features.iloc[:,4:], save_path='quantile.pkl')
+    test_features.iloc[:,4:] = gauss_rank(test_features.iloc[:,4:], save_path='quantile.pkl')
+    data = pd.concat((train_features, test_features))
+
     data = add_PCA_feature(data, g_n_comp=600, c_n_comp=50)
 
     remove_cols = get_variance_encoding_columns(data.iloc[:, 4:], 0.87)
     data = add_clustering_feature(data, g_n_cluster=22, c_n_cluster=4, pca_n_cluster=5)
-    data = add_stat_feature(data)
+
+    data_stat = get_stat_feature(data_ori)
+    data = pd.concat((data.reset_index(drop=True, inplace=False) , data_stat), axis=1)
 
     data = drop_columns(data, remove_cols)
 

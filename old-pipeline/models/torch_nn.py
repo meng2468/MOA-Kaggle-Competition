@@ -136,7 +136,7 @@ class Model(nn.Module):
         self.activation_type = activation_type
 
         self.batch_norm1 = nn.BatchNorm1d(num_features)
-#         self.dropout1 = nn.Dropout(0.2)
+         #self.dropout1 = nn.Dropout(0.2)
         self.dense1 = nn.utils.weight_norm(nn.Linear(num_features, hidden_size))
 
         self.batch_norm2 = nn.BatchNorm1d(hidden_size)
@@ -166,7 +166,7 @@ class Model(nn.Module):
 
 
         x1 = self.batch_norm1(x)
-#         x1 = self.dropout1(x1)
+        #x1 = self.dropout1(x1)
 
         if self.activation_type == "LEAKY":
             x1 = F.leaky_relu(self.dense1(x1))
@@ -197,7 +197,7 @@ class Model_Res(nn.Module):
         self.activation_type = activation_type
 
         self.batch_norm1 = nn.BatchNorm1d(num_features)
-#         self.dropout1 = nn.Dropout(0.2)
+        # self.dropout1 = nn.Dropout(0.2)
         self.dense1 = nn.utils.weight_norm(nn.Linear(num_features, hidden_size))
 
         self.batch_norm2 = nn.BatchNorm1d(hidden_size)
@@ -208,7 +208,7 @@ class Model_Res(nn.Module):
         self.dropout3 = nn.Dropout(dropout)
         self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, hidden_size))
 
-#         self.conv = nn.Conv1d(hidden_size, num_targets, 3)
+        # self.conv = nn.Conv1d(hidden_size, num_targets, 3)
         self.pool = nn.AvgPool1d(3)
         self.dense4 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
 
@@ -231,7 +231,7 @@ class Model_Res(nn.Module):
 
 
         x1 = self.batch_norm1(x)
-#         x1 = self.dropout1(x1)
+        # x1 = self.dropout1(x1)
         if self.activation_type == "LEAKY":
             x1 = F.leaky_relu(self.dense1(x1))
         elif self.activation_type == "SWISH":
@@ -252,10 +252,10 @@ class Model_Res(nn.Module):
         x3 = self.dropout3(x3)
         x3 = self.dense3(x3)
 
-#         stack = torch.stack([x1,x2,x3], dim=2)
-# #         y = self.conv(stack)
-#         y = self.pool(stack)
-#         y = y.squeeze(-1)
+        # stack = torch.stack([x1,x2,x3], dim=2)
+        # y = self.conv(stack)
+        # y = self.pool(stack)
+        # y = y.squeeze(-1)
 
         y = torch.add(x1, x3)
 
