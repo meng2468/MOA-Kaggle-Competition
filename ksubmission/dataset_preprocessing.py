@@ -97,7 +97,7 @@ def split_moa_train_test(data, train_len, test_len):
     return (train_data, test_data)
 
 def add_stat_feature(data):
-    gsquarecols=['g-574','g-211','g-216','g-0','g-255','g-577','g-153','g-389','g-60','g-370','g-248','g-167','g-203','g-177','g-301','g-332','g-517','g-6','g-744','g-224','g-162','g-3','g-736','g-486','g-283','g-22','g-359','g-361','g-440','g-335','g-106','g-307','g-745','g-146','g-416','g-298','g-666','g-91','g-17','g-549','g-145','g-157','g-768','g-568','g-396']
+    GSQUARE=['g-574','g-211','g-216','g-0','g-255','g-577','g-153','g-389','g-60','g-370','g-248','g-167','g-203','g-177','g-301','g-332','g-517','g-6','g-744','g-224','g-162','g-3','g-736','g-486','g-283','g-22','g-359','g-361','g-440','g-335','g-106','g-307','g-745','g-146','g-416','g-298','g-666','g-91','g-17','g-549','g-145','g-157','g-768','g-568','g-396']
 
     GENES, CELLS = get_genes_cell_header(data)
 
@@ -142,18 +142,19 @@ def add_stat_feature(data):
     out_df['c90_c55'] = df['c-90'] * df['c-55']
     
     
-    for feature in features_c:
+    for feature in CELLS:
         out_df[f'{feature}_squared'] = df[feature] ** 2     
             
-    for feature in gsquarecols:
+    for feature in GSQUARE:
         out_df[f'{feature}_squared'] = df[feature] ** 2        
         
     data_with_stat = pd.concat((data.reset_index(drop=True, inplace=False) , out_df), axis=1)
+    print(f"Add #{data_with_stat.shape[1]} Stats features")
     return data_with_stat
 
-def one_hot_encode_moa(data):
-    data = one_hot_encoding(data, "cp_time", [24,48,72])
-    data = one_hot_encoding(data, "cp_dose", ["D1","D2"])
+def one_hot_encode_moa(data, drop_columns=True):
+    data = one_hot_encoding(data, "cp_time", [24,48,72], drop_columns)
+    data = one_hot_encoding(data, "cp_dose", ["D1","D2"], drop_columns)
     return data
 
 def add_PCA_feature(data, g_n_comp=50, c_n_comp=15, 
@@ -285,8 +286,8 @@ def preprocessing_NN_meta(train_features, train_targets, test_features):
     train_features = drop_cp_type(train_features)
     test_features = drop_cp_type(test_features)
 
-    train_features = pd.get_dummies(train_features, columns=['cp_time','cp_dose'])
-    test_features = pd.get_dummies(test_features, columns=['cp_time','cp_dose'])
+    train_features = one_hot_encode_moa(train_features, False)
+    test_features = one_hot_encode_moa(test_features, False)
     
     print("SIZE :", "TRAIN", train_features.shape)
     return train_features, train_targets, test_features
