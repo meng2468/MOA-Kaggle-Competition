@@ -4,10 +4,13 @@ from sklearn.model_selection import KFold
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 from iterstrat.ml_stratifiers import MultilabelStratifiedShuffleSplit
 
-def get_strat_folds(df_features, df_targets, folds):
+def get_strat_folds(df_features, df_targets, folds, state):
+    #https://www.kaggle.com/tolgadincer/iter-strat-some-seeds-are-better-than-others
+    # good_seeds = [14, 16, 77, 76, 34]
+    # state = good_seeds[state]
     features = df_features.to_numpy()
     targets = df_targets.to_numpy()
-    mlskf = MultilabelStratifiedKFold(n_splits = folds)
+    mlskf = MultilabelStratifiedKFold(n_splits = folds, shuffle=True, random_state=state)
 
     datasets = []
     for train_index, test_index in mlskf.split(features, targets):
