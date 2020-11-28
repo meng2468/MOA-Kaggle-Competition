@@ -1,3 +1,7 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
 # simply define a silu function
 def silu(input):
     '''
@@ -51,17 +55,17 @@ class Model(nn.Module):
         self.dropout3 = nn.Dropout(0.2)
         self.dense3 = nn.utils.weight_norm(nn.Linear(hidden_size, num_targets))
         
-        self.silu1 =  SiLU()
-        self.silu2 =  SiLU()
+        # self.silu1 =  SiLU()
+        # self.silu2 =  SiLU()
     
     def forward(self, x):
         x = self.batch_norm1(x)
         x = self.dropout1(x)
-        x = self.silu1(self.dense1(x))
+        x = F.leaky_relu(self.dense1(x), 1e-3)
         
         x = self.batch_norm2(x)
         x = self.dropout2(x)
-        x = self.silu2(self.dense2(x))
+        x = F.relu(self.dense2(x))
         
         x = self.batch_norm3(x)
         x = self.dropout3(x)
