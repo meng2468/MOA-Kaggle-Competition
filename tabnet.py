@@ -71,128 +71,7 @@ set_seed(seed)
 
 # %% [code]
 # Parameters
-data_path = ""
-no_ctl = True
-scale = "rankgauss"
-variance_threshould = 0.8
-decompo = "PCA"
-ncompo_genes = 600
-ncompo_cells = 50
-encoding = "dummy"
 
-# %% [markdown]
-# ## <font color = "green">Loading the Data</font>
-
-# %% [code]
-train = pd.read_csv(data_path + "train_features.csv")
-targets = pd.read_csv(data_path + "train_targets_scored.csv")
-test = pd.read_csv(data_path + "test_features.csv")
-
-submission = pd.read_csv(data_path + "sample_submission.csv")
-
-# %% [markdown]
-# # <font color = "seagreen">Preprocessing and Feature Engineering</font>
-
-# %% [code]
-if no_ctl:
-    # cp_type == ctl_vehicle
-    print(b_, "not_ctl")
-    train = train[train["cp_type"] != "ctl_vehicle"]
-    test = test[test["cp_type"] != "ctl_vehicle"]
-    targets = targets.iloc[train.index]
-    train.reset_index(drop = True, inplace = True)
-    test.reset_index(drop = True, inplace = True)
-    targets.reset_index(drop = True, inplace = True)
-
-
-# %% [code]
-GENES = [col for col in train.columns if col.startswith("g-")]
-CELLS = [col for col in train.columns if col.startswith("c-")]
-
-# %% [markdown]
-# ## <font color = "green">Rank Gauss Process</font>
-
-# %% [code]
-data_all = pd.concat([train, test], ignore_index = True)
-cols_numeric = [feat for feat in list(data_all.columns) if feat not in ["sig_id", "cp_type", "cp_time", "cp_dose"]]
-mask = (data_all[cols_numeric].var() >= variance_threshould).values
-tmp = data_all[cols_numeric].loc[:, mask]
-data_all = pd.concat([data_all[["sig_id", "cp_type", "cp_time", "cp_dose"]], tmp], axis = 1)
-cols_numeric = [feat for feat in list(data_all.columns) if feat not in ["sig_id", "cp_type", "cp_time", "cp_dose"]]
-
-### Rank Gauss ###
-print(b_, "Rank Gauss")
-scaler = GaussRankScaler()
-data_all[cols_numeric] = scaler.fit_transform(data_all[cols_numeric])
-
-# %% [markdown]
-# ## <font color = "green">Principal Component Analysis</font>
-
-# %% [code]
-# PCA
-if decompo == "PCA":
-    print(b_, "PCA")
-    GENES = [col for col in data_all.columns if col.startswith("g-")]
-    CELLS = [col for col in data_all.columns if col.startswith("c-")]
-    
-    pca_genes = PCA(n_components = ncompo_genes,
-                    random_state = seed).fit_transform(data_all[GENES])
-    pca_cells = PCA(n_components = ncompo_cells,
-                    random_state = seed).fit_transform(data_all[CELLS])
-    
-    pca_genes = pd.DataFrame(pca_genes, columns = [f"pca_g-{i}" for i in range(ncompo_genes)])
-    pca_cells = pd.DataFrame(pca_cells, columns = [f"pca_c-{i}" for i in range(ncompo_cells)])
-    data_all = pd.concat([data_all, pca_genes, pca_cells], axis = 1)
-else:
-    pass
-
-# %% [markdown]
-# ## <font color = "green">One Hot</font>
-
-# %% [code]
-# Encoding
-data_all = pd.get_dummies(data_all, columns = ["cp_time", "cp_dose"])
-
-# %% [code]
-GENES = [col for col in data_all.columns if col.startswith("g-")]
-CELLS = [col for col in data_all.columns if col.startswith("c-")]
-
-for stats in tqdm.tqdm(["sum", "mean", "std", "kurt", "skew"]):
-    data_all["g_" + stats] = getattr(data_all[GENES], stats)(axis = 1)
-    data_all["c_" + stats] = getattr(data_all[CELLS], stats)(axis = 1)    
-    data_all["gc_" + stats] = getattr(data_all[GENES + CELLS], stats)(axis = 1)
-
-# %% [markdown]
-# We can confirme that the shapes of data got close to the normal distribution.
-
-# %% [code]
-with open("data_all.pickle", "wb") as f:
-    pickle.dump(data_all, f)
-
-# %% [code]
-with open("data_all.pickle", "rb") as f:
-    data_all = pickle.load(f)
-
-# %% [code]
-# train_df and test_df
-features_to_drop = ["sig_id", "cp_type"]
-data_all.drop(features_to_drop, axis = 1, inplace = True)
-try:
-    targets.drop("sig_id", axis = 1, inplace = True)
-except:
-    pass
-train_df = data_all[: train.shape[0]]
-train_df.reset_index(drop = True, inplace = True)
-test_df = data_all[train_df.shape[0]: ]
-test_df.reset_index(drop = True, inplace = True)
-
-# %% [code]
-print(f"{b_}train_df.shape: {r_}{train_df.shape}")
-print(f"{b_}test_df.shape: {r_}{test_df.shape}")
-
-# %% [code]
-X_test = test_df.values
-print(f"{b_}X_test.shape: {r_}{X_test.shape}")
 
 # %% [markdown]
 # # <font color = "seagreen">Modeling</font>
@@ -274,6 +153,128 @@ NB_SPLITS = 5 # 7
 mskf = MultilabelStratifiedKFold(n_splits = NB_SPLITS, random_state = 0, shuffle = True)
 
 def objective(trial):
+    data_path = "../input/lish-moa/"
+    no_ctl = True
+    scale = "rankgauss"
+    variance_threshould = trial.suggest_float('var', .5,.8)
+    decompo = "PCA"
+    ncompo_genes = 600
+    ncompo_cells = 50
+    encoding = "dummy"
+
+    # %% [markdown]
+    # ## <font color = "green">Loading the Data</font>
+
+    # %% [code]
+    train = pd.read_csv(data_path + "train_features.csv")
+    targets = pd.read_csv(data_path + "train_targets_scored.csv")
+    test = pd.read_csv(data_path + "test_features.csv")
+
+    submission = pd.read_csv(data_path + "sample_submission.csv")
+
+    # %% [markdown]
+    # # <font color = "seagreen">Preprocessing and Feature Engineering</font>
+
+    # %% [code]
+    if no_ctl:
+        # cp_type == ctl_vehicle
+        print(b_, "not_ctl")
+        train = train[train["cp_type"] != "ctl_vehicle"]
+        test = test[test["cp_type"] != "ctl_vehicle"]
+        targets = targets.iloc[train.index]
+        train.reset_index(drop = True, inplace = True)
+        test.reset_index(drop = True, inplace = True)
+        targets.reset_index(drop = True, inplace = True)
+
+
+    # %% [code]
+    GENES = [col for col in train.columns if col.startswith("g-")]
+    CELLS = [col for col in train.columns if col.startswith("c-")]
+
+    # %% [markdown]
+    # ## <font color = "green">Rank Gauss Process</font>
+
+    # %% [code]
+    data_all = pd.concat([train, test], ignore_index = True)
+    cols_numeric = [feat for feat in list(data_all.columns) if feat not in ["sig_id", "cp_type", "cp_time", "cp_dose"]]
+    mask = (data_all[cols_numeric].var() >= variance_threshould).values
+    tmp = data_all[cols_numeric].loc[:, mask]
+    data_all = pd.concat([data_all[["sig_id", "cp_type", "cp_time", "cp_dose"]], tmp], axis = 1)
+    cols_numeric = [feat for feat in list(data_all.columns) if feat not in ["sig_id", "cp_type", "cp_time", "cp_dose"]]
+
+    ### Rank Gauss ###
+    print(b_, "Rank Gauss")
+    scaler = GaussRankScaler()
+    data_all[cols_numeric] = scaler.fit_transform(data_all[cols_numeric])
+
+    # %% [markdown]
+    # ## <font color = "green">Principal Component Analysis</font>
+
+    # %% [code]
+    # PCA
+    if decompo == "PCA":
+        print(b_, "PCA")
+        GENES = [col for col in data_all.columns if col.startswith("g-")]
+        CELLS = [col for col in data_all.columns if col.startswith("c-")]
+        
+        pca_genes = PCA(n_components = ncompo_genes,
+                        random_state = seed).fit_transform(data_all[GENES])
+        pca_cells = PCA(n_components = ncompo_cells,
+                        random_state = seed).fit_transform(data_all[CELLS])
+        
+        pca_genes = pd.DataFrame(pca_genes, columns = [f"pca_g-{i}" for i in range(ncompo_genes)])
+        pca_cells = pd.DataFrame(pca_cells, columns = [f"pca_c-{i}" for i in range(ncompo_cells)])
+        data_all = pd.concat([data_all, pca_genes, pca_cells], axis = 1)
+    else:
+        pass
+
+    # %% [markdown]
+    # ## <font color = "green">One Hot</font>
+
+    # %% [code]
+    # Encoding
+    data_all = pd.get_dummies(data_all, columns = ["cp_time", "cp_dose"])
+
+    # %% [code]
+    GENES = [col for col in data_all.columns if col.startswith("g-")]
+    CELLS = [col for col in data_all.columns if col.startswith("c-")]
+
+    for stats in tqdm.tqdm(["sum", "mean", "std", "kurt", "skew"]):
+        data_all["g_" + stats] = getattr(data_all[GENES], stats)(axis = 1)
+        data_all["c_" + stats] = getattr(data_all[CELLS], stats)(axis = 1)    
+        data_all["gc_" + stats] = getattr(data_all[GENES + CELLS], stats)(axis = 1)
+
+    # %% [markdown]
+    # We can confirme that the shapes of data got close to the normal distribution.
+
+    # %% [code]
+    with open("data_all.pickle", "wb") as f:
+        pickle.dump(data_all, f)
+
+    # %% [code]
+    with open("data_all.pickle", "rb") as f:
+        data_all = pickle.load(f)
+
+    # %% [code]
+    # train_df and test_df
+    features_to_drop = ["sig_id", "cp_type"]
+    data_all.drop(features_to_drop, axis = 1, inplace = True)
+    try:
+        targets.drop("sig_id", axis = 1, inplace = True)
+    except:
+        pass
+    train_df = data_all[: train.shape[0]]
+    train_df.reset_index(drop = True, inplace = True)
+    test_df = data_all[train_df.shape[0]: ]
+    test_df.reset_index(drop = True, inplace = True)
+
+    # %% [code]
+    print(f"{b_}train_df.shape: {r_}{train_df.shape}")
+    print(f"{b_}test_df.shape: {r_}{test_df.shape}")
+
+    # %% [code]
+    X_test = test_df.values
+    print(f"{b_}X_test.shape: {r_}{X_test.shape}")
     test_cv_preds = []
     oof_preds = []
     oof_targets = []
@@ -294,8 +295,8 @@ def objective(trial):
         gamma = 1.3,
         lambda_sparse = 0,
         optimizer_fn = optim.Adam,
-        optimizer_params = dict(lr = trial.suggest_loguniform("learning_rate", 1e-3, 1e-2), weight_decay = 1e-5), #2e-2 1e-5
-        # optimizer_params = dict(lr = 2e-2, weight_decay = 1e-5), #2e-2 1e-5
+        # optimizer_params = dict(lr = trial.suggest_loguniform("learning_rate", 1e-3, 1e-2), weight_decay = 1e-5), #2e-2 1e-5
+        optimizer_params = dict(lr = 1e-2, weight_decay = 1e-5), #2e-2 1e-5
         mask_type = "entmax",
         scheduler_params = dict(
             mode = "min", patience = 5, min_lr = 1e-5, factor = 0.9),
@@ -304,10 +305,10 @@ def objective(trial):
         verbose = 10
     )
     
-    batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
-    virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
-    # batch_size = 1024
-    # virtual_batch_size = 32
+    # batch_size = trial.suggest_int('batch_size', 128, 1024, 128)
+    # virtual_batch_size = trial.suggest_int('virtual_bs', 32, 128, 32)
+    batch_size = 256
+    virtual_batch_size = 32
 
     print('Running study with ' + str(batch_size) + 'bs, ' + str(virtual_batch_size) + 'vbs')
     for fold_nb, (train_idx, val_idx) in enumerate(mskf.split(train_df, targets)):
@@ -367,12 +368,12 @@ def objective(trial):
     print(f"{b_}Average CV: {r_}{np.mean(scores)}")
     return np.mean(scores)
 
-study_name = 'tabnet_600g50c'
+study_name = 'tabnet_600g50c_var'
 for _ in range(100):
-    study = optuna.create_study(study_name=study_name, storage='sqlite:///drive/MyDrive/moa/'+study_name+'.db', load_if_exists=True)
+    study = optuna.create_study(study_name=study_name, storage='sqlite:///'+study_name+'.db', load_if_exists=True)
     study.optimize(objective, n_trials=3)
     df = study.trials_dataframe(attrs=('number', 'value', 'params', 'state'))
-    df.to_csv('drive/MyDrive/moa/tb_tuning'+date.today()+'.csv')
+    df.to_csv('tb_tuning_var.csv')
 
 # %% [markdown]
 # # <font color = "seagreen">Submission</font>
