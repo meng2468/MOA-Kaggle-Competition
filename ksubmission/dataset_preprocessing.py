@@ -356,7 +356,7 @@ def preprocessing_NN_TL(train_features, train_targets, test_features):
     return train_features, train_targets, test_features
 
 def preprocessing_NN_TL_transform(test_features, paths_dict):
-    for k in ['quantile', 'g_pca', 'c_pca', 'g_cluster', 'c_cluster', 'pca_cluster', 'remove_col']:
+    for k in ['quantile', 'g_pca', 'c_pca', 'remove_col']:
         assert k in paths_dict.keys()
 
     data = test_features
@@ -364,10 +364,7 @@ def preprocessing_NN_TL_transform(test_features, paths_dict):
     data.iloc[:,4:] = gauss_rank(data.iloc[:,4:], load_path=paths_dict['quantile'])
     data = add_PCA_feature(data, load_path_g=paths_dict['g_pca'], load_path_c=paths_dict['c_pca'])
 
-
     remove_cols = load(open(paths_dict['remove_col'], 'rb'))
-
-    data = pd.concat((data.reset_index(drop=True, inplace=False) , data_stat), axis=1)
     data = drop_columns(data, remove_cols)
 
     data = drop_cp_type(data)
