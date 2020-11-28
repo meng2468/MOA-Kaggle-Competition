@@ -153,7 +153,7 @@ def get_stat_feature(data):
     for feature in GSQUARE:
         out_df[f'{feature}_squared'] = df[feature] ** 2        
 
-    print(f"Add #{data_with_stat.shape[1]} Stats features")
+    print(f"Add #{out_df.shape[1]} Stats features")
     return out_df    
     # data_with_stat = pd.concat((data.reset_index(drop=True, inplace=False) , out_df), axis=1)
     # return data_with_stat
@@ -220,6 +220,7 @@ def remove_variance_encoding(data, threshold=0.5, save_path="./remove_col.pkl"):
     remove features using variance encoding
     ''' 
     remove_cols = get_variance_encoding_columns(data.iloc[:, 4:], threshold)
+    dump(remove_cols, open(save_path, 'wb'))
     print(f"Remove #{len(remove_cols)} features via Variance Encoding (threshold={threshold})")
 
     return drop_columns(data, remove_cols)
@@ -278,13 +279,12 @@ def preprocessing_NN_meta(train_features, train_targets, test_features):
     data = pd.concat((train_features, test_features))
     data_ori = data.copy()
 
-    train_features.iloc[:,4:] = gauss_rank(train_features.iloc[:,4:], save_path='quantile.pkl')
-    test_features.iloc[:,4:] = gauss_rank(test_features.iloc[:,4:], save_path='quantile.pkl')
-    data = pd.concat((train_features, test_features))
-
+    data.iloc[:,4:] = gauss_rank(data.iloc[:,4:])
     data = add_PCA_feature(data, g_n_comp=600, c_n_comp=50)
-
+    
     remove_cols = get_variance_encoding_columns(data.iloc[:, 4:], 0.87)
+    dump(remove_cols, open('remove_col.pkl', 'wb'))
+
     data = add_clustering_feature(data, g_n_cluster=22, c_n_cluster=4, pca_n_cluster=5)
 
     data_stat = get_stat_feature(data_ori)
@@ -304,3 +304,73 @@ def preprocessing_NN_meta(train_features, train_targets, test_features):
     
     print("SIZE :", "TRAIN", train_features.shape)
     return train_features, train_targets, test_features
+
+def preprocessing_NN_meta_transform(test_features, paths_dict):
+    for k in ['quantile', 'g_pca', 'c_pca', 'g_cluster', 'c_cluster', 'pca_cluster', 'remove_col']:
+        assert k in paths_dict.keys()
+
+    data = test_features
+    data_ori = data.copy()
+    data.iloc[:,4:] = gauss_rank(data.iloc[:,4:], load_path=paths_dict['quantile'])
+    data = add_PCA_feature(data, load_path_g=paths_dict['g_pca'], load_path_c=paths_dict['c_pca'])
+    data = add_clustering_feature(data, load_path_g=paths_dict['g_cluster'], load_path_c=paths_dict['c_cluster'], load_path_pca=paths_dict['pca_cluster'])
+
+    data_stat = get_stat_feature(data_ori)
+
+    remove_cols = load(open(paths_dict['remove_col'], 'rb'))
+
+    data = pd.concat((data.reset_index(drop=True, inplace=False) , data_stat), axis=1)
+    data = drop_columns(data, remove_cols)
+
+    data = drop_cp_type(data)
+    data = one_hot_encode_moa(data, False)
+    return data
+
+def preprocessing_NN_TL(train_features, train_targets, test_features):
+    
+    train_len = train_features.shape[0]
+    test_len = test_features.shape[0]
+
+    data = pd.concat((train_features, test_features))
+    data_ori = data.copy()
+
+    data.iloc[:,4:] = gauss_rank(data.iloc[:,4:])
+    data = add_PCA_feature(data, g_n_comp=600, c_n_comp=50)
+    
+    remove_cols = get_variance_encoding_columns(data.iloc[:, 4:], 0.82)
+    dump(remove_cols, open('remove_col.pkl', 'wb'))
+    data = drop_columns(data, remove_cols)
+
+    train_features, test_features = split_moa_train_test(data, train_len, test_len)
+
+    train_features, train_targets = remove_ctl_vehicle(train_features, train_targets)
+
+    train_features = drop_cp_type(train_features)
+    test_features = drop_cp_type(test_features)
+
+    train_features = one_hot_encode_moa(train_features, False)
+    test_features = one_hot_encode_moa(test_features, False)
+    
+    print("SIZE :", "TRAIN", train_features.shape)
+    return train_features, train_targets, test_features
+
+def preprocessing_NN_TL_transform(test_features, paths_dict):
+    for k in ['quantile', 'g_pca', 'c_pca', 'g_cluster', 'c_cluster', 'pca_cluster', 'remove_col']:
+        assert k in paths_dict.keys()
+
+    data = test_features
+    data_ori = data.copy()
+    data.iloc[:,4:] = gauss_rank(data.iloc[:,4:], load_path=paths_dict['quantile'])
+    data = add_PCA_feature(data, load_path_g=paths_dict['g_pca'], load_path_c=paths_dict['c_pca'])
+    data = add_clustering_feature(data, load_path_g=paths_dict['g_cluster'], load_path_c=paths_dict['c_cluster'], load_path_pca=paths_dict['pca_cluster'])
+
+    data_stat = get_stat_feature(data_ori)
+
+    remove_cols = load(open(paths_dict['remove_col'], 'rb'))
+
+    data = pd.concat((data.reset_index(drop=True, inplace=False) , data_stat), axis=1)
+    data = drop_columns(data, remove_cols)
+
+    data = drop_cp_type(data)
+    data = one_hot_encode_moa(data, False)
+    return data

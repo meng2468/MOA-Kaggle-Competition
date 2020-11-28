@@ -1,5 +1,6 @@
 import pandas as pd
 import torch
+import torch.nn as nn
 from torch.nn.modules.loss import _WeightedLoss
 import torch.nn.functional as F
 
@@ -36,3 +37,21 @@ def get_log_loss(Y, pred):
         pred = pred.values
     scores = [log_loss(Y[:, i], pred[:, i]) for i in range(Y.shape[1])]
     return scores
+
+class LabelSmoothingLoss(nn.Module):
+    def __init__(self, classes, smoothing=0.0, dim=-1):
+        super(LabelSmoothingLoss, self).__init__()
+        self.confidence = 1.0 - smoothing
+        self.smoothing = smoothing
+        self.cls = classes
+        self.dim = dim
+
+    def forward(self, pred, target):
+        pred = pred.log_softmax(dim=self.dim)
+
+        with torch.no_grad():
+            true_dist = torch.zeros_like(pred)
+            true_dist.fill_(self.smoothing / (self.cls - 1))
+            true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
+            
+        return torch.mean(torch.sum(-true_dist * pred, dim=self.dim))    
