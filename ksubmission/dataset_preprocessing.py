@@ -226,7 +226,7 @@ def remove_variance_encoding(data, threshold=0.5, save_path="./remove_col.pkl"):
 
     return drop_columns(data, remove_cols)
 
-def remove_ctl_vehicle(train, target):
+def remove_ctl_vehicle(train, target=None):
     '''
     remove ctl_vehicle form train_data and train_target
     '''
@@ -235,13 +235,23 @@ def remove_ctl_vehicle(train, target):
     print(f"Remove {len(ctl_ids)} ctl_vehicel data")
 
     train = train[~train['sig_id'].isin(ctl_ids)].reset_index(drop=True)
-    target = target[~target['sig_id'].isin(ctl_ids)].reset_index(drop=True)
+    if target:
+        target = target[~target['sig_id'].isin(ctl_ids)].reset_index(drop=True)
 
     return train, target
 
 def drop_cp_type(data):
     print("Dropping cp_type column")
     return drop_columns(data, "cp_type")
+
+def get_state_feature_tabnet(data):
+    GENES, CELLS = get_genes_cell_header(data)
+    out_df = pd.DataFrame()
+    for stats in ["sum", "mean", "std", "kurt", "skew"]:
+        out_df["g_" + stats] = getattr(data[GENES], stats)(axis = 1)
+        out_df["c_" + stats] = getattr(data[CELLS], stats)(axis = 1)    
+        out_df["gc_" + stats] = getattr(data[GENES + CELLS], stats)(axis = 1)
+    return out_df
 
 def preprocessing_pipeline(train_features, train_targets, test_features):
 
