@@ -62,9 +62,10 @@ def get_clustering_features(data, n_clusters, name="cluster_x", random_state=42,
         dump(kmeans_model, open(save_path, 'wb'))
     else:
         kmeans_model = load(open(load_path, 'rb'))
+        n_clusters = kmeans_model.n_clusters
     features_cluster = kmeans_model.predict(data)
-    features_cluster
     df = pd.DataFrame(features_cluster, columns=[name])
+    df[name] = df[name].astype(CategoricalDtype(list(range(n_clusters))))
     return pd.get_dummies(df, columns=[name])
 
 ### ========================================== Feature Scaling
@@ -362,9 +363,7 @@ def preprocessing_NN_TL_transform(test_features, paths_dict):
     data_ori = data.copy()
     data.iloc[:,4:] = gauss_rank(data.iloc[:,4:], load_path=paths_dict['quantile'])
     data = add_PCA_feature(data, load_path_g=paths_dict['g_pca'], load_path_c=paths_dict['c_pca'])
-    data = add_clustering_feature(data, load_path_g=paths_dict['g_cluster'], load_path_c=paths_dict['c_cluster'], load_path_pca=paths_dict['pca_cluster'])
 
-    data_stat = get_stat_feature(data_ori)
 
     remove_cols = load(open(paths_dict['remove_col'], 'rb'))
 
