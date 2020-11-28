@@ -244,8 +244,19 @@ def objective(trial):
         data_all["c_" + stats] = getattr(data_all[CELLS], stats)(axis = 1)    
         data_all["gc_" + stats] = getattr(data_all[GENES + CELLS], stats)(axis = 1)
 
+    print(data_all.head())
+    cols_numeric = [feat for feat in list(data_all.columns) if feat not in ["sig_id", "cp_type", "cp_time", "cp_dose"]]
+    mask = (data_all[cols_numeric].var() >= variance_threshould).values
+    tmp = data_all[cols_numeric].loc[:, mask]
+    data_all = pd.concat([data_all[["sig_id", "cp_type"]], tmp], axis = 1)
+    print(data_all.head())
     # %% [markdown]
     # We can confirme that the shapes of data got close to the normal distribution.
+    # cols_numeric = [feat for feat in list(data_all.columns) if feat not in ["sig_id", "cp_type", "cp_time", "cp_dose"]]
+    # mask = (data_all[cols_numeric].var() >= variance_threshould).values
+    # tmp = data_all[cols_numeric].loc[:, mask]
+    # data_all = pd.concat([data_all[["sig_id", "cp_type", "cp_time", "cp_dose"]], tmp], axis = 1)
+    # print(data_all.info())
 
     # %% [code]
     with open("data_all.pickle", "wb") as f:
@@ -296,7 +307,7 @@ def objective(trial):
         lambda_sparse = 0,
         optimizer_fn = optim.Adam,
         # optimizer_params = dict(lr = trial.suggest_loguniform("learning_rate", 1e-3, 1e-2), weight_decay = 1e-5), #2e-2 1e-5
-        optimizer_params = dict(lr = 1e-2, weight_decay = 1e-5), #2e-2 1e-5
+        optimizer_params = dict(lr = 2e-2, weight_decay = 1e-5), #2e-2 1e-5
         mask_type = "entmax",
         scheduler_params = dict(
             mode = "min", patience = 5, min_lr = 1e-5, factor = 0.9),
@@ -368,7 +379,7 @@ def objective(trial):
     print(f"{b_}Average CV: {r_}{np.mean(scores)}")
     return np.mean(scores)
 
-study_name = 'tabnet_600g50c_var'
+study_name = 'tabnet_post_fs'
 for _ in range(100):
     study = optuna.create_study(study_name=study_name, storage='sqlite:///'+study_name+'.db', load_if_exists=True)
     study.optimize(objective, n_trials=3)
