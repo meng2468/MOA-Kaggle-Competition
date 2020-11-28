@@ -43,7 +43,7 @@ for saved_model in weight_files:
     pred_ = torch_inference(model, testloader, DEVICE)
     predictions_meta.append(pred_)
 
-meta_feature = np.mean(predictions_meta, axis=2)
+meta_feature = np.mean(predictions_meta, axis=0)
 
 ## Stage 2
 # model2, load, predict -> scored

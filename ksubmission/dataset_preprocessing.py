@@ -356,7 +356,7 @@ def preprocessing_NN_TL(train_features, train_targets, test_features):
     return train_features, train_targets, test_features
 
 def preprocessing_NN_TL_transform(test_features, paths_dict):
-    for k in ['quantile', 'g_pca', 'c_pca', 'g_cluster', 'c_cluster', 'pca_cluster', 'remove_col']:
+    for k in ['quantile', 'g_pca', 'c_pca', 'remove_col']:
         assert k in paths_dict.keys()
 
     data = test_features
