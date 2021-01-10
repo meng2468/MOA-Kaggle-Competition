@@ -15,5 +15,5 @@
 - TabNet can still be optimised to .01834!!! https://www.kaggle.com/c/lish-moa/discussion/198850
 
 ### Implementation
-- Re-write all final models (Submission code needs to be original)
+- Re-write all final models
 - Add weight loading so final submission can just be plugged
